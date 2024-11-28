@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
@@ -55,9 +56,9 @@ public class UserController {
      * @return A ResponseEntity with a success message if the login is successful.
      */
     @PostMapping("/auth/login")
-    public ResponseEntity<String> loginUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+    public ResponseEntity<String> loginUser(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
         try {
-            boolean isAuthenticated = userService.authenticateUser(userRequestDTO);
+            boolean isAuthenticated = userService.authenticateUser(loginRequestDTO);
             if (isAuthenticated) {
                 return ResponseEntity.ok("Login successful");
             }

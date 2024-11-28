@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
@@ -121,14 +122,16 @@ public UserDTO readUserByEmailAsDTO(String email) {
  * @return true if authentication is successful, false otherwise.
  * @throws IllegalArgumentException if the email or password is invalid.
  */
-public boolean authenticateUser(UserRequestDTO userRequestDTO) {
-    User user = userRepository.findByEmail(userRequestDTO.getEmail());
+public boolean authenticateUser(LoginRequestDTO loginRequestDTO) {
+    User user = userRepository.findByEmail(loginRequestDTO.getEmail());
     if (user == null) {
-        throw new IllegalArgumentException("No user found with email: " + userRequestDTO.getEmail());
+        throw new IllegalArgumentException("No user found with email: " + loginRequestDTO.getEmail());
     }
-    boolean isPasswordValid = passwordEncoder.matches(userRequestDTO.getPassword(), user.getPassword());
+    //System.out.println("Raw password provided: " + loginRequestDTO.getPassword());
+    //System.out.println("Stored hashed password: " + user.getPassword());
+    boolean isPasswordValid = passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword());
     if (!isPasswordValid) {
-        throw new IllegalArgumentException("Invalid password for email: " + userRequestDTO.getEmail());
+        throw new IllegalArgumentException("Invalid password for email: " + loginRequestDTO.getEmail());
     }
     return true;
 }
