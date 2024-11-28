@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
 
+import com.chatop.dto.UserDTO;
+import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.repository.UserRepository;
 
@@ -22,26 +24,15 @@ public class UserService {
      * @param user The user object to create.
      * @return The created user.
      */
-    public User createUser(User user) {
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email is required");
-        }
-        if (userRepository.findByEmail(user.getEmail()) != null) {
-            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
-        }
-        if (!isValidEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Invalid email format: " + user.getEmail());
-        }
-        if (user.getName() == null || user.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Name is required");
-        }
-        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
-            throw new IllegalArgumentException("Password is required");
+    public User createUser(UserRequestDTO userRequestDTO) {
+        if (userRepository.findByEmail(userRequestDTO.getEmail()) != null) {
+            throw new IllegalArgumentException("Email already exists: " + userRequestDTO.getEmail());
         }
     
-        user.setName(user.getName().trim());
-        user.setPassword(user.getPassword().trim());  // TO DO : Encrypt password
-    
+        User user = new User();
+        user.setName(userRequestDTO.getName().trim());
+        user.setEmail(userRequestDTO.getEmail().trim());
+        user.setPassword(userRequestDTO.getPassword()); // TODO: Encrypt the password
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
     
@@ -62,6 +53,26 @@ public class UserService {
         user.setPassword(null); // Exclude password from the response
         return user;
     }
+
+    /**
+ * Retrieves a user by their email and converts it into a UserDTO.
+ *
+ * @param email The email of the user to retrieve.
+ * @return A UserDTO containing the user's details, excluding sensitive information.
+ * @throws IllegalArgumentException if no user is found with the given email.
+ */
+public UserDTO readUserByEmailAsDTO(String email) {
+    // Retrieve the user by email
+    User user = userRepository.findByEmail(email);
+
+    // Check if the user exists
+    if (user == null) {
+        throw new IllegalArgumentException("User not found with email: " + email);
+    }
+
+    // Convert the User entity to UserDTO and return
+    return UserDTO.fromEntity(user);
+}
 
     /**
      * Retrieves a user by their ID.
@@ -99,6 +110,24 @@ public class UserService {
         return userRepository.save(user);
     }
 
+/**
+ * Authenticates a user by validating their email and password.
+ *
+ * @param userRequestDTO The DTO containing the user's email and password.
+ * @return true if authentication is successful, false otherwise.
+ * @throws IllegalArgumentException if the email or password is invalid.
+ */
+public boolean authenticateUser(UserRequestDTO userRequestDTO) {
+    User user = userRepository.findByEmail(userRequestDTO.getEmail());
+    if (user == null) {
+        throw new IllegalArgumentException("No user found with email: " + userRequestDTO.getEmail());
+    }
+    if (!user.getPassword().equals(userRequestDTO.getPassword())) {
+        throw new IllegalArgumentException("Invalid password for email: " + userRequestDTO.getEmail());
+    }
+    return true;
+}
+
     /**
      * Deletes a user by their email.
      *
@@ -112,14 +141,4 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    /**
-     * Validates an email format.
-     *
-     * @param email The email to validate.
-     * @return True if the email format is valid, otherwise false.
-     */
-    private boolean isValidEmail(String email) {
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
-        return email.matches(emailRegex);
-    }
 }

@@ -1,12 +1,16 @@
 package com.chatop.controller;
 
+import com.chatop.dto.UserDTO;
+import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+
 /**
- * Controller for managing user-related operations such as registration, login, and user details retrieval.
+ * Controller for managing user-related operations such as registration, login, and profile retrieval.
  */
 @RestController
 @RequestMapping("/api")
@@ -14,6 +18,11 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * Constructs the UserController.
+     *
+     * @param userService The service for managing users.
+     */
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -21,47 +30,55 @@ public class UserController {
     /**
      * Registers a new user.
      *
-     * @param user The user object containing registration details.
-     * @return The created user.
+     * @param userRequestDTO The DTO containing the user's registration details.
+     * @return A ResponseEntity with the created user's details as a DTO.
      */
     @PostMapping("/auth/register")
-    public ResponseEntity<User> registerUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
+    public ResponseEntity<UserDTO> registerUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        User createdUser = userService.createUser(userRequestDTO);
+        UserDTO userDTO = UserDTO.fromEntity(createdUser);
+        return ResponseEntity.ok(userDTO);
     }
 
     /**
-     * Authenticates a user (login functionality).
+     * Logs in a user.
+     * (For simplicity, this method just validates user credentials without issuing a token.)
      *
-     * @param user The user object containing login credentials (email and password).
-     * @return A placeholder message (JWT to be implemented later).
+     * @param userRequestDTO The DTO containing the user's login credentials.
+     * @return A ResponseEntity with a success message if the login is successful.
      */
     @PostMapping("/auth/login")
-    public ResponseEntity<String> loginUser(@RequestBody User user) {
-        return ResponseEntity.ok("Login functionality to be implemented");
+    public ResponseEntity<String> loginUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
+        boolean isAuthenticated = userService.authenticateUser(userRequestDTO);
+        if (isAuthenticated) {
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
     }
 
     /**
-     * Retrieves the details of the currently authenticated user.
+     * Retrieves the currently authenticated user's profile.
      *
-     * @param email The email of the user (to be replaced by JWT-based identification).
-     * @return The user object with sensitive data (e.g., password) excluded.
+     * @param email The email of the authenticated user (simulated for now).
+     * @return A ResponseEntity with the user's details as a DTO.
      */
     @GetMapping("/auth/me")
-    public ResponseEntity<User> getUserDetails(@RequestParam String email) {
-        User user = userService.readUser(email);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<UserDTO> getAuthenticatedUser(@RequestParam String email) {
+        UserDTO userDTO = userService.readUserByEmailAsDTO(email);
+        return ResponseEntity.ok(userDTO);
     }
 
     /**
-     * Retrieves the details of another user by their ID.
+     * Retrieves the profile of a specific user by their ID.
      *
      * @param id The ID of the user to retrieve.
-     * @return The user object.
+     * @return A ResponseEntity with the user's details as a DTO.
      */
     @GetMapping("/user/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Integer id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
         User user = userService.readUserById(id);
-        return ResponseEntity.ok(user);
+        UserDTO userDTO = UserDTO.fromEntity(user);
+        return ResponseEntity.ok(userDTO);
     }
 }
