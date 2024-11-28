@@ -10,16 +10,22 @@ import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.repository.UserRepository;
+import com.chatop.util.JwtUtil;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder; 
+    private final JwtUtil jwtUtil;
 
-    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder) {
+    public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     /**
@@ -116,25 +122,22 @@ public UserDTO readUserByEmailAsDTO(String email) {
     }
 
 /**
- * Authenticates a user by validating their email and password.
- *
- * @param userRequestDTO The DTO containing the user's email and password.
- * @return true if authentication is successful, false otherwise.
- * @throws IllegalArgumentException if the email or password is invalid.
- */
-public boolean authenticateUser(LoginRequestDTO loginRequestDTO) {
-    User user = userRepository.findByEmail(loginRequestDTO.getEmail());
-    if (user == null) {
-        throw new IllegalArgumentException("No user found with email: " + loginRequestDTO.getEmail());
+     * Authenticates a user and generates a JWT token upon success.
+     *
+     * @param loginRequestDTO The login credentials.
+     * @return The generated JWT token if authentication succeeds.
+     * @throws IllegalArgumentException if email or password is invalid.
+     */
+    public String authenticateUser(LoginRequestDTO loginRequestDTO) {
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail());
+        if (user == null) {
+            throw new IllegalArgumentException("No user found with email: " + loginRequestDTO.getEmail());
+        }
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Invalid password for email: " + loginRequestDTO.getEmail());
+        }
+        return jwtUtil.generateToken(user.getEmail());
     }
-    //System.out.println("Raw password provided: " + loginRequestDTO.getPassword());
-    //System.out.println("Stored hashed password: " + user.getPassword());
-    boolean isPasswordValid = passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword());
-    if (!isPasswordValid) {
-        throw new IllegalArgumentException("Invalid password for email: " + loginRequestDTO.getEmail());
-    }
-    return true;
-}
 
     /**
      * Deletes a user by their email.
