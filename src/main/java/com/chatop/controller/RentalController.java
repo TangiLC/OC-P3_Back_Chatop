@@ -41,7 +41,7 @@ public class RentalController {
      *
      * @return A ResponseEntity containing a list of RentalDTOs.
      */
-    @GetMapping("/rentals/")
+    @GetMapping("/rentals")
     public ResponseEntity<List<RentalDTO>> getAllRentals() {
         List<RentalDTO> rentalDTOs = rentalService.readAllRentalsAsDTO();
         return ResponseEntity.ok(rentalDTOs);

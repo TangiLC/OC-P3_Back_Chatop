@@ -1,11 +1,18 @@
 package com.chatop.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
@@ -49,12 +56,15 @@ public class UserController {
      */
     @PostMapping("/auth/login")
     public ResponseEntity<String> loginUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
-        boolean isAuthenticated = userService.authenticateUser(userRequestDTO);
-        if (isAuthenticated) {
-            return ResponseEntity.ok("Login successful");
-        } else {
-            return ResponseEntity.status(401).body("Invalid email or password");
+        try {
+            boolean isAuthenticated = userService.authenticateUser(userRequestDTO);
+            if (isAuthenticated) {
+                return ResponseEntity.ok("Login successful");
+            }
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(401).body(ex.getMessage());
         }
+        return ResponseEntity.status(401).body("Invalid email or password");
     }
 
     /**

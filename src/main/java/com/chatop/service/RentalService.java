@@ -39,8 +39,12 @@ public class RentalService {
      */
     public List<RentalDTO> readAllRentalsAsDTO() {
         List<Rental> rentals = rentalRepository.findAll();
+        //System.out.println("Number of rentals found: " + rentals.size());
         return rentals.stream()
-                      .map(RentalDTO::fromEntity) // Transform entities to DTOs
+        .map(rental -> {
+            //System.out.println("Processing rental ID: " + rental.getId());
+            return RentalDTO.fromEntity(rental);
+        })
                       .toList();
     }
 

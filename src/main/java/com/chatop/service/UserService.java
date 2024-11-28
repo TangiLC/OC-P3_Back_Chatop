@@ -2,6 +2,7 @@ package com.chatop.service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.chatop.dto.UserDTO;
@@ -13,13 +14,15 @@ import com.chatop.repository.UserRepository;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder; 
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
-     * Creates a new user.
+     * Creates a new user and hashes the password before saving.
      *
      * @param user The user object to create.
      * @return The created user.
@@ -32,7 +35,8 @@ public class UserService {
         User user = new User();
         user.setName(userRequestDTO.getName().trim());
         user.setEmail(userRequestDTO.getEmail().trim());
-        user.setPassword(userRequestDTO.getPassword()); // TODO: Encrypt the password
+        String hashedPassword = passwordEncoder.encode(userRequestDTO.getPassword());
+        user.setPassword(hashedPassword);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
     
@@ -122,7 +126,8 @@ public boolean authenticateUser(UserRequestDTO userRequestDTO) {
     if (user == null) {
         throw new IllegalArgumentException("No user found with email: " + userRequestDTO.getEmail());
     }
-    if (!user.getPassword().equals(userRequestDTO.getPassword())) {
+    boolean isPasswordValid = passwordEncoder.matches(userRequestDTO.getPassword(), user.getPassword());
+    if (!isPasswordValid) {
         throw new IllegalArgumentException("Invalid password for email: " + userRequestDTO.getEmail());
     }
     return true;

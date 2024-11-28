@@ -48,6 +48,13 @@ public class RentalDTO {
      * @return The corresponding RentalDTO.
      */
     public static RentalDTO fromEntity(com.chatop.model.Rental rental) {
+        if (rental == null) {
+            throw new IllegalArgumentException("Rental entity cannot be null");
+        }
+    
+        if (rental.getOwner() == null || rental.getOwner().getId() == null) {
+            throw new IllegalArgumentException("Rental owner or owner ID cannot be null");
+        }
         return new RentalDTO(
             rental.getId(),
             rental.getName(),
@@ -55,7 +62,7 @@ public class RentalDTO {
             rental.getPrice(),
             rental.getPicture(),
             rental.getDescription(),
-            rental.getOwner().getId(), // Extract owner ID
+            rental.getOwner().getId(),
             rental.getCreatedAt(),
             rental.getUpdatedAt()
         );
