@@ -17,78 +17,87 @@ public class RentalService {
         this.rentalRepository = rentalRepository;
     }
 
+    /**
+     * Creates a new rental.
+     *
+     * @param rental The rental object to create.
+     * @return The created rental.
+     */
     public Rental createRental(Rental rental) {
         if (rental.getName() == null || rental.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Rental name is required");
         }
-        if (rental.getOwner() == null) {
-            throw new IllegalArgumentException("Owner is required");
+        if (rental.getSurface() == null || rental.getSurface() <= 0) {
+            throw new IllegalArgumentException("Rental surface must be greater than 0");
         }
         if (rental.getPrice() == null || rental.getPrice() <= 0) {
-            throw new IllegalArgumentException("Price must be greater than zero");
+            throw new IllegalArgumentException("Rental price must be greater than 0");
         }
-        if (rental.getSurface() == null || rental.getSurface() <= 0) {
-            throw new IllegalArgumentException("Surface must be greater than zero");
-        }
-
         rental.setCreatedAt(LocalDateTime.now());
         rental.setUpdatedAt(LocalDateTime.now());
         return rentalRepository.save(rental);
     }
 
-    public Rental readRentalById(Integer id) {
+    /**
+     * Retrieves a rental by its ID.
+     *
+     * @param id The ID of the rental to retrieve.
+     * @return The rental object.
+     */
+    public Rental readRental(Integer id) {
         return rentalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rental not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + id));
     }
 
+    /**
+     * Retrieves all rentals.
+     *
+     * @return A list of all rentals.
+     */
     public List<Rental> readAllRentals() {
         return rentalRepository.findAll();
     }
 
-    public List<Rental> readRentalsByOwnerId(Integer ownerId) {
-        return rentalRepository.findByOwnerId(ownerId);
+    /**
+     * Updates a rental by its ID.
+     *
+     * @param id The ID of the rental to update.
+     * @param updatedData The updated rental data.
+     * @return The updated rental object.
+     */
+    public Rental updateRental(Integer id, Rental updatedData) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + id));
+
+        // Update only non-null fields
+        if (updatedData.getName() != null) {
+            rental.setName(updatedData.getName().trim());
+        }
+        if (updatedData.getSurface() != null) {
+            rental.setSurface(updatedData.getSurface());
+        }
+        if (updatedData.getPrice() != null) {
+            rental.setPrice(updatedData.getPrice());
+        }
+        if (updatedData.getDescription() != null) {
+            rental.setDescription(updatedData.getDescription().trim());
+        }
+        if (updatedData.getPicture() != null) {
+            rental.setPicture(updatedData.getPicture());
+        }
+
+        rental.setUpdatedAt(LocalDateTime.now());
+        return rentalRepository.save(rental);
     }
 
-    public List<Rental> searchByName(String keyword) {
-        return rentalRepository.findByNameContaining(keyword);
-    }
-
-    public List<Rental> filterBySurface(Integer minSurface) {
-        return rentalRepository.findBySurfaceGreaterThanEqual(minSurface);
-    }
-
-    public List<Rental> filterByPriceRange(Integer minPrice, Integer maxPrice) {
-        return rentalRepository.findByPriceBetween(minPrice, maxPrice);
-    }
-
-    public Rental updateRental(Integer id, Rental updatedRental) {
-        Rental existingRental = rentalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Rental not found with id: " + id));
-
-        if (updatedRental.getName() != null && !updatedRental.getName().trim().isEmpty()) {
-            existingRental.setName(updatedRental.getName());
-        }
-        if (updatedRental.getSurface() != null) {
-            existingRental.setSurface(updatedRental.getSurface());
-        }
-        if (updatedRental.getPrice() != null && updatedRental.getPrice() > 0) {
-            existingRental.setPrice(updatedRental.getPrice());
-        }
-        if (updatedRental.getPicture() != null) {
-            existingRental.setPicture(updatedRental.getPicture());
-        }
-        if (updatedRental.getDescription() != null) {
-            existingRental.setDescription(updatedRental.getDescription());
-        }
-
-        existingRental.setUpdatedAt(LocalDateTime.now());
-        return rentalRepository.save(existingRental);
-    }
-
-    public void deleteRentalById(Integer id) {
-        if (!rentalRepository.existsById(id)) {
-            throw new RuntimeException("Rental not found with id: " + id);
-        }
-        rentalRepository.deleteById(id);
+    /**
+     * Deletes a rental by its ID.
+     *
+     * @param id The ID of the rental to delete.
+     */
+    public void deleteRental(Integer id) {
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + id));
+        rentalRepository.delete(rental);
     }
 }

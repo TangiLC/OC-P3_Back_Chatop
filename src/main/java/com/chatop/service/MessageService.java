@@ -1,6 +1,5 @@
 package com.chatop.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -17,51 +16,44 @@ public class MessageService {
         this.messageRepository = messageRepository;
     }
 
+    /**
+     * Creates a new message.
+     *
+     * @param message The message object to create.
+     * @return The created message.
+     */
     public Message createMessage(Message message) {
-        if (message.getMessage() == null || message.getMessage().trim().isEmpty()) {
-            throw new IllegalArgumentException("Message content is required");
-        }
-        if (message.getRental() == null) {
-            throw new IllegalArgumentException("Rental is required");
-        }
-        if (message.getUser() == null) {
-            throw new IllegalArgumentException("User is required");
-        }
-
-        message.setCreatedAt(LocalDateTime.now());
-        message.setUpdatedAt(LocalDateTime.now());
         return messageRepository.save(message);
     }
 
+    /**
+     * Retrieves a message by its ID.
+     *
+     * @param id The ID of the message to retrieve.
+     * @return The message object.
+     */
     public Message readMessageById(Integer id) {
         return messageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
+                .orElseThrow(() -> new RuntimeException("Message not found with ID: " + id));
     }
 
-    public List<Message> readMessagesByRentalId(Integer rentalId) {
-        return messageRepository.findByRentalId(rentalId);
-    }
-
+    /**
+     * Retrieves all messages sent by a specific user.
+     *
+     * @param userId The ID of the user whose messages to retrieve.
+     * @return A list of messages sent by the user.
+     */
     public List<Message> readMessagesByUserId(Integer userId) {
         return messageRepository.findByUserId(userId);
     }
 
-    public Message updateMessage(Integer id, Message updatedMessage) {
-        Message existingMessage = messageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found with id: " + id));
-
-        if (updatedMessage.getMessage() != null && !updatedMessage.getMessage().trim().isEmpty()) {
-            existingMessage.setMessage(updatedMessage.getMessage());
-        }
-
-        existingMessage.setUpdatedAt(LocalDateTime.now());
-        return messageRepository.save(existingMessage);
-    }
-
-    public void deleteMessageById(Integer id) {
-        if (!messageRepository.existsById(id)) {
-            throw new RuntimeException("Message not found with id: " + id);
-        }
-        messageRepository.deleteById(id);
+    /**
+     * Retrieves all messages related to a specific rental.
+     *
+     * @param rentalId The ID of the rental whose messages to retrieve.
+     * @return A list of messages related to the rental.
+     */
+    public List<Message> readMessagesByRentalId(Integer rentalId) {
+        return messageRepository.findByRentalId(rentalId);
     }
 }
