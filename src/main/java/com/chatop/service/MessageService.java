@@ -32,17 +32,14 @@ public class MessageService {
      * @param userId The ID of the user sending the message.
      * @param rentalId The ID of the rental associated with the message.
      * @return The created message.
+     * @throws RuntimeException         If the user_id or rental_id cannot be found.
+     * @throws IllegalArgumentException If the message content is null or empty.
      */
     public Message createMessage(String messageContent, Integer userId, Integer rentalId) {
-        // Validate user existence
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-
-        // Validate rental existence
         Rental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + rentalId));
-
-        // Validate message content
         if (messageContent == null || messageContent.trim().isEmpty()) {
             throw new IllegalArgumentException("Message content cannot be null or empty.");
         }
@@ -54,7 +51,7 @@ public class MessageService {
         message.setRental(rental);
         message.setCreatedAt(LocalDateTime.now());
         message.setUpdatedAt(LocalDateTime.now());
-
+        System.out.println("service "+message);
         return messageRepository.save(message);
     }
 

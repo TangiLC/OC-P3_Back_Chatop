@@ -19,11 +19,10 @@ import com.chatop.service.MessageService;
  * Controller for managing messages.
  */
 @RestController
-@RequestMapping("/api/messages")
+@RequestMapping("/api")
 public class MessageController {
 
     private final MessageService messageService;
-
     /**
      * Constructs a MessageController.
      *
@@ -31,56 +30,42 @@ public class MessageController {
      */
     public MessageController(MessageService messageService) {
         this.messageService = messageService;
+        
     }
 
     /**
-     * Creates a new message.
+     * Creates a new message. Authentification via Bearer JWT
      *
      * @param payload A map containing the message content, user ID, and rental ID.
+     * @param authorizationHeader The Authorization header with Bearer token.
      * @return A ResponseEntity containing a MessageResponseDTO with the created message content.
      */
-    @PostMapping("/")
-    public ResponseEntity<MessageResponseDTO> createMessage(@RequestBody Map<String, Object> payload) {
-        try {
-            // Extract parameters from the payload
-            String messageContent = (String) payload.get("message");
-            Integer userId = (Integer) payload.get("user_id");
-            Integer rentalId = (Integer) payload.get("rental_id");
+   @PostMapping("/messages/")
+public ResponseEntity<?> createMessage(@RequestBody Map<String, Object> payload) {
+    System.out.println("Create Message"+payload);
+    try {
+        // Récupérer le payload
+        System.out.println("Payload received: " + payload);
 
-            // Call service to create the message
-            Message message = messageService.createMessage(messageContent, userId, rentalId);
+        // Extraire les paramètres
+        String messageContent = (String) payload.get("message");
+        Integer userId = (Integer) payload.get("user_id");
+        Integer rentalId = (Integer) payload.get("rental_id");
+        
+        messageService.createMessage(messageContent,userId,rentalId);
 
-            // Create DTO for response
-            MessageResponseDTO responseDTO = new MessageResponseDTO(message.getMessage());
-            return ResponseEntity.ok(responseDTO);
+        return ResponseEntity.ok(new MessageResponseDTO("Message sent successfully"));
 
-        } catch (IllegalArgumentException e) {
-            // Bad Request for invalid data
-            return ResponseEntity.badRequest().body(null);
-        } catch (RuntimeException e) {
-            // Not Found for invalid user or rental IDs
-            return ResponseEntity.status(404).body(null);
-        } catch (Exception e) {
-            // Internal Server Error for unexpected issues
-            return ResponseEntity.status(500).body(null);
-        }
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error 1st catch", e.getMessage()));
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(404).body(Map.of("error 2nd catch", e.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of("error", "An unexpected error occurred"));
     }
+}
 
-    /**
-     * Retrieves a message by its ID.
-     *
-     * @param id The ID of the message.
-     * @return A ResponseEntity containing the requested message.
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<Message> readMessageById(@PathVariable Integer id) {
-        try {
-            Message message = messageService.readMessageById(id);
-            return ResponseEntity.ok(message);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body(null);
-        }
-    }
+
 
     /**
      * Retrieves all messages sent by a specific user.
@@ -88,7 +73,7 @@ public class MessageController {
      * @param userId The ID of the user.
      * @return A ResponseEntity containing a list of messages sent by the user.
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/messages/user/{userId}")
     public ResponseEntity<List<Message>> readMessagesByUserId(@PathVariable Integer userId) {
         try {
             List<Message> messages = messageService.readMessagesByUserId(userId);
@@ -104,7 +89,7 @@ public class MessageController {
      * @param rentalId The ID of the rental.
      * @return A ResponseEntity containing a list of messages related to the rental.
      */
-    @GetMapping("/rental/{rentalId}")
+    @GetMapping("/messages/rental/{rentalId}")
     public ResponseEntity<List<Message>> readMessagesByRentalId(@PathVariable Integer rentalId) {
         try {
             List<Message> messages = messageService.readMessagesByRentalId(rentalId);

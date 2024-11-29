@@ -73,10 +73,7 @@ public class UserService {
  * @throws IllegalArgumentException if no user is found with the given email.
  */
 public UserDTO readUserByEmailAsDTO(String email) {
-    // Retrieve the user by email
     User user = userRepository.findByEmail(email);
-
-    // Check if the user exists
     if (user == null) {
         throw new IllegalArgumentException("User not found with email: " + email);
     }
