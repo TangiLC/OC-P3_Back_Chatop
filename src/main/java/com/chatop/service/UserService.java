@@ -32,11 +32,11 @@ public class UserService {
   /**
    * Creates a new user and hashes the password before saving.
    *
-   * @param user The user object to create.
-   * @return The created user.
+   * @param userRequestDTO The DTO containing user details for registration.
+   * @return The created user entity.
    */
   public User createUser(UserRequestDTO userRequestDTO) {
-    if (userRepository.findByEmail(userRequestDTO.getEmail()) != null) {
+    if (userRepository.findByEmail(userRequestDTO.getEmail()).isPresent()) {
       throw new IllegalArgumentException(
         "Email already exists: " + userRequestDTO.getEmail()
       );
@@ -45,10 +45,7 @@ public class UserService {
     User user = new User();
     user.setName(userRequestDTO.getName().trim());
     user.setEmail(userRequestDTO.getEmail().trim());
-    String hashedPassword = passwordEncoder.encode(
-      userRequestDTO.getPassword()
-    );
-    user.setPassword(hashedPassword);
+    user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
 
@@ -62,12 +59,15 @@ public class UserService {
    * @return The user object with sensitive data excluded.
    */
   public User readUser(String email) {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
-      throw new RuntimeException("User not found with email: " + email);
-    }
-    user.setPassword(null); // Exclude password from the response
-    return user;
+    return userRepository
+      .findByEmail(email)
+      .map(user -> {
+        user.setPassword(null); // Exclude password from the response
+        return user;
+      })
+      .orElseThrow(() ->
+        new RuntimeException("User not found with email: " + email)
+      );
   }
 
   /**
@@ -78,20 +78,19 @@ public class UserService {
    * @throws IllegalArgumentException if no user is found with the given email.
    */
   public UserDTO readUserByEmailAsDTO(String email) {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
-      throw new IllegalArgumentException("User not found with email: " + email);
-    }
-
-    // Convert the User entity to UserDTO and return
-    return UserDTO.fromEntity(user);
+    return userRepository
+      .findByEmail(email)
+      .map(UserDTO::fromEntity)
+      .orElseThrow(() ->
+        new IllegalArgumentException("User not found with email: " + email)
+      );
   }
 
   /**
    * Retrieves a user by their ID.
    *
    * @param id The ID of the user to retrieve.
-   * @return The user object.
+   * @return The user entity.
    */
   public User readUserById(Integer id) {
     return userRepository
@@ -102,22 +101,25 @@ public class UserService {
   /**
    * Updates a user's details.
    *
-   * @param email The email of the user to update.
+   * @param email       The email of the user to update.
    * @param updatedData The updated user data.
-   * @return The updated user object.
+   * @return The updated user entity.
    */
   public User updateUser(String email, User updatedData) {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
-      throw new RuntimeException("User not found with email: " + email);
-    }
+    User user = userRepository
+      .findByEmail(email)
+      .orElseThrow(() ->
+        new RuntimeException("User not found with email: " + email)
+      );
 
     // Update only non-null fields
     if (updatedData.getName() != null) {
       user.setName(updatedData.getName().trim());
     }
     if (updatedData.getPassword() != null) {
-      user.setPassword(updatedData.getPassword().trim()); // TO DO : Encrypt password
+      user.setPassword(
+        passwordEncoder.encode(updatedData.getPassword().trim())
+      );
     }
 
     user.setUpdatedAt(LocalDateTime.now());
@@ -132,12 +134,14 @@ public class UserService {
    * @throws IllegalArgumentException if email or password is invalid.
    */
   public String authenticateUser(LoginRequestDTO loginRequestDTO) {
-    User user = userRepository.findByEmail(loginRequestDTO.getEmail());
-    if (user == null) {
-      throw new IllegalArgumentException(
-        "No user found with email: " + loginRequestDTO.getEmail()
+    User user = userRepository
+      .findByEmail(loginRequestDTO.getEmail())
+      .orElseThrow(() ->
+        new IllegalArgumentException(
+          "No user found with email: " + loginRequestDTO.getEmail()
+        )
       );
-    }
+
     if (
       !passwordEncoder.matches(
         loginRequestDTO.getPassword(),
@@ -148,6 +152,7 @@ public class UserService {
         "Invalid password for email: " + loginRequestDTO.getEmail()
       );
     }
+
     return jwtUtil.generateToken(user.getEmail());
   }
 
@@ -157,10 +162,11 @@ public class UserService {
    * @param email The email of the user to delete.
    */
   public void deleteUser(String email) {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
-      throw new RuntimeException("User not found with email: " + email);
-    }
+    User user = userRepository
+      .findByEmail(email)
+      .orElseThrow(() ->
+        new RuntimeException("User not found with email: " + email)
+      );
     userRepository.delete(user);
   }
 }

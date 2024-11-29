@@ -1,20 +1,30 @@
 package com.chatop.controller;
 
-import com.chatop.dto.RentalDTO;
-import com.chatop.dto.RentalRequestDTO;
-import com.chatop.dto.RentalsResponseDTO;
-import com.chatop.model.Rental;
-import com.chatop.service.RentalService;
-import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.chatop.dto.RentalDTO;
+import com.chatop.dto.RentalRequestDTO;
+import com.chatop.dto.RentalsResponseDTO;
+import com.chatop.model.Rental;
+import com.chatop.service.RentalService;
+import com.chatop.util.JwtUtil;
+
+import jakarta.validation.Valid;
 
 /**
  * Controller for managing rental-related operations such as retrieval, creation, and updates.
@@ -24,14 +34,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class RentalController {
 
   private final RentalService rentalService;
+  private final JwtUtil jwtUtil;
 
   /**
    * Constructs the RentalController.
    *
    * @param rentalService The service for managing rentals.
    */
-  public RentalController(RentalService rentalService) {
+  public RentalController(
+    RentalService rentalService,
+    JwtUtil jwtUtil
+  ) {
     this.rentalService = rentalService;
+    this.jwtUtil = jwtUtil;
   }
 
   /**
@@ -65,13 +80,57 @@ public class RentalController {
    * @param rentalRequestDTO The DTO containing the details of the rental to be created.
    * @return A ResponseEntity containing the created RentalDTO.
    */
-  @PostMapping("/rentals/")
-  public ResponseEntity<RentalDTO> createRental(
-    @Valid @RequestBody RentalRequestDTO rentalRequestDTO
+  @PostMapping(value="/rentals", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<?> createRental(
+    @RequestPart("name") String name,
+    @RequestPart("surface") Integer surface,
+    @RequestPart("price") Integer price,
+    @RequestPart("picture") MultipartFile picture,
+    @RequestPart(value="description",required=false) String description,
+    @RequestHeader HttpHeaders headers
   ) {
-    Rental createdRental = rentalService.createRental(rentalRequestDTO);
-    RentalDTO rentalDTO = RentalDTO.fromEntity(createdRental);
-    return ResponseEntity.ok(rentalDTO);
+    try {
+      String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+      if (
+        authorizationHeader == null ||
+        !authorizationHeader.startsWith("Bearer ")
+      ) {
+        return ResponseEntity
+          .status(401)
+          .body("Missing or invalid authorization token");
+      }
+
+      String token = authorizationHeader.substring(7);
+      if (!jwtUtil.validateToken(token)) {
+        return ResponseEntity.status(401).body("Invalid or expired token");
+      }
+      String email = jwtUtil.extractEmail(token);
+      String pictureUrl = null;
+        if (picture != null && !picture.isEmpty()) {
+            pictureUrl = picture.getOriginalFilename(); 
+        }
+      
+      RentalRequestDTO rentalRequestDTO = new RentalRequestDTO();
+      rentalRequestDTO.setName(name);
+      rentalRequestDTO.setSurface(surface);
+      rentalRequestDTO.setPrice(price);
+      rentalRequestDTO.setDescription(description);
+      rentalRequestDTO.setPicture(pictureUrl);
+
+      //Rental rental = 
+      rentalService.createRental(rentalRequestDTO, email);
+      
+      //RentalDTO rentalDTO = RentalDTO.fromEntity(rental);
+
+      return ResponseEntity.ok(Map.of("message", "Rental created!"));
+
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(404).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("An unexpected error occurred");
+    }
   }
 
   /**

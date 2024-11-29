@@ -25,8 +25,11 @@ public class RentalRequestDTO {
 
   private String description;
 
-  @NotNull(message = "Owner ID is required")
-  private Integer ownerId;
+  /*@NotNull(message = "Owner ID is required")
+  private Integer ownerId;*/
+
+  public RentalRequestDTO() {
+  }
 
   // Getters and Setters
 
@@ -54,7 +57,7 @@ public class RentalRequestDTO {
     this.price = price;
   }
 
-  public String getPicture() {
+  public String getPicture() {  //TO DO Url String -> Blob file ??
     return picture;
   }
 
@@ -70,11 +73,11 @@ public class RentalRequestDTO {
     this.description = description;
   }
 
-  public Integer getOwnerId() {
+  /*public Integer getOwnerId() {
     return ownerId;
   }
 
   public void setOwnerId(Integer ownerId) {
     this.ownerId = ownerId;
-  }
+  }*/
 }

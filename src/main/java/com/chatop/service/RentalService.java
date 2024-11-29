@@ -71,15 +71,11 @@ public class RentalService {
    * @param rentalRequestDTO The DTO containing rental data.
    * @return The created Rental object.
    */
-  public Rental createRental(RentalRequestDTO rentalRequestDTO) {
+  public Rental createRental(RentalRequestDTO rentalRequestDTO, String ownerEmail) {
     // Fetch the owner from the database
-    User owner = userRepository
-      .findById(rentalRequestDTO.getOwnerId())
-      .orElseThrow(() ->
-        new RuntimeException(
-          "Owner not found with ID: " + rentalRequestDTO.getOwnerId()
-        )
-      );
+    User owner = userRepository.findByEmail(ownerEmail)
+    .orElseThrow(() -> new IllegalArgumentException("Owner not found with email: " + ownerEmail));
+
 
     // Map DTO to Entity
     Rental rental = new Rental();
