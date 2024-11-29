@@ -59,6 +59,19 @@ public class JwtUtil {
         }
     }
 
+    public Date extractExpiration(String token) {
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
+        } catch (Exception e) {
+            return null; 
+        }
+    }
+
     /**
      * Extrait l'email de l'utilisateur à partir d'un token JWT.
      *
