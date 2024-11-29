@@ -12,29 +12,34 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        /*http    //  mode dev/test
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http)
+    throws Exception {
+    /*http    //  mode dev/test
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .formLogin(form -> form.disable());*/
 
-    
-        http.csrf(csrf -> csrf.disable())   
-             .authorizeHttpRequests(auth -> {
-                auth.requestMatchers(
-                    "api/auth/**",
-                 "api/rentals/**",
-                 "/public/**","/v3/**").permitAll(); 
-                auth.anyRequest().authenticated(); 
-            })
-            .formLogin(form -> form.disable()); 
+    http
+      .csrf(csrf -> csrf.disable())
+      .authorizeHttpRequests(auth -> {
+        auth
+          .requestMatchers(
+            "api/auth/**",
+            "api/rentals/**",
+            "/public/**",
+            "/v3/**"
+          )
+          .permitAll();
+        auth.anyRequest().authenticated();
+      })
+      .formLogin(form -> form.disable());
 
-        return http.build();
-    }
+    return http.build();
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }

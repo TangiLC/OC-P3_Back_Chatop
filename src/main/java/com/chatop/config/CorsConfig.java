@@ -9,25 +9,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsConfig {
 
-    /**
-     * Configures Cross-Origin Resource Sharing (CORS) for the application.
-     * 
-     * @return A CorsConfigurationSource that defines allowed origins, methods, and headers.
-     */
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+  /**
+   * Configures Cross-Origin Resource Sharing (CORS) for the application.
+   *
+   * @return A CorsConfigurationSource that defines allowed origins, methods, and headers.
+   */
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.addAllowedOrigin("http://localhost:4200"); // Front-end URL
-        configuration.addAllowedOrigin("http://localhost:3001"); // Back-end testing 
+    configuration.addAllowedOrigin("http://localhost:4200"); // Front-end URL
+    configuration.addAllowedOrigin("http://localhost:3001"); // Back-end testing
 
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+    configuration.addAllowedMethod("*");
+    configuration.addAllowedHeader("*");
+    configuration.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+    return source;
+  }
 }
