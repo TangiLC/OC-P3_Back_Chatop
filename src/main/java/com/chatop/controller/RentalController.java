@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.chatop.dto.RentalDTO;
 import com.chatop.dto.RentalRequestDTO;
+import com.chatop.dto.RentalsResponseDTO;
 import com.chatop.model.Rental;
 import com.chatop.service.RentalService;
 
@@ -42,9 +43,10 @@ public class RentalController {
      * @return A ResponseEntity containing a list of RentalDTOs.
      */
     @GetMapping("/rentals")
-    public ResponseEntity<List<RentalDTO>> getAllRentals() {
+    public ResponseEntity<RentalsResponseDTO> getAllRentals() {
         List<RentalDTO> rentalDTOs = rentalService.readAllRentalsAsDTO();
-        return ResponseEntity.ok(rentalDTOs);
+        RentalsResponseDTO rentalsObject = new RentalsResponseDTO(rentalDTOs);
+        return ResponseEntity.ok(rentalsObject);
     }
 
     /**

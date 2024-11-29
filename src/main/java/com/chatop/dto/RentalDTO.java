@@ -2,6 +2,8 @@ package com.chatop.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Data Transfer Object (DTO) for transferring rental data.
  */
@@ -13,7 +15,9 @@ public class RentalDTO {
     private String picture;
     private String description;
     private Integer ownerId;
+    @JsonProperty("created_at")
     private LocalDateTime createdAt;
+    @JsonProperty("updated_at")
     private LocalDateTime updatedAt;
 
     /**
