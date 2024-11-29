@@ -67,7 +67,7 @@ public class MessageService {
     message.setRental(rental);
     message.setCreatedAt(LocalDateTime.now());
     message.setUpdatedAt(LocalDateTime.now());
-    System.out.println("service " + message);
+    System.out.println("******************service Message did run*****" + message);
     return messageRepository.save(message);
   }
 

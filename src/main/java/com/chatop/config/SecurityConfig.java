@@ -27,8 +27,8 @@ public class SecurityConfig {
           .requestMatchers(
             "api/auth/**",
             "api/rentals/**",
-            "/public/**",
-            "/v3/**"
+            "/public/**","api/user/**",
+            "/v3/**","api/messages/**"
           )
           .permitAll();
         auth.anyRequest().authenticated();

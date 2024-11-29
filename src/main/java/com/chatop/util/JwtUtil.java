@@ -23,8 +23,8 @@ public class JwtUtil {
   private final long expiration;
 
   public JwtUtil() {
-    // Génère une clé sécurisée dynamique pour HMAC-SHA-512
-    this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+    // Génère une clé sécurisée dynamique pour HMAC-SHA-256
+    this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     // Définit la durée d'expiration du token (par exemple, 1 heure)
     this.expiration = 3600000; // 1 heure en millisecondes

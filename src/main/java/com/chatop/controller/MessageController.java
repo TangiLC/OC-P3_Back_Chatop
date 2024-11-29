@@ -1,17 +1,22 @@
 package com.chatop.controller;
 
-import com.chatop.dto.MessageResponseDTO;
-import com.chatop.model.Message;
-import com.chatop.service.MessageService;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.chatop.dto.MessageResponseDTO;
+import com.chatop.model.Message;
+import com.chatop.service.MessageService;
+import com.chatop.util.JwtUtil;
 
 /**
  * Controller for managing messages.
@@ -21,14 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class MessageController {
 
   private final MessageService messageService;
+  private final JwtUtil jwtUtil;
 
   /**
    * Constructs a MessageController.
    *
    * @param messageService The service for managing messages.
    */
-  public MessageController(MessageService messageService) {
+  public MessageController(MessageService messageService,  JwtUtil jwtUtil) {
     this.messageService = messageService;
+    this.jwtUtil = jwtUtil;
   }
 
   /**
@@ -40,8 +47,21 @@ public class MessageController {
    */
   @PostMapping("/messages")
   public ResponseEntity<?> createMessage(
-    @RequestBody Map<String, Object> payload
+    @RequestBody Map<String, Object> payload,
+    @RequestHeader HttpHeaders headers
   ) {
+ // Extract the Authorization header
+ String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+ if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+     return ResponseEntity.status(401).body(new MessageResponseDTO("Missing or invalid authorization token"));
+ }
+ // Extract the token and validate
+ String token = authorizationHeader.substring(7);
+ if (!jwtUtil.validateToken(token)) {
+     return ResponseEntity.status(401).body(new MessageResponseDTO("Invalid or expired token"));
+ }
+
+
     System.out.println("Create Message" + payload);
     try {
       // Récupérer le payload
