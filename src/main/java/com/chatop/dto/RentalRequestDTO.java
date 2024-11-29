@@ -1,5 +1,7 @@
 package com.chatop.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,14 +23,27 @@ public class RentalRequestDTO {
   private Integer price;
 
   @NotBlank(message = "Rental picture URL is required")
-  private String picture;
+  private MultipartFile picture;
 
   private String description;
 
   /*@NotNull(message = "Owner ID is required")
   private Integer ownerId;*/
 
-  public RentalRequestDTO() {
+  //  Getters and Setters
+
+  public RentalRequestDTO(
+    String name,
+    Integer surface,
+    Integer price,
+    MultipartFile picture,
+    String description
+  ) {
+    this.name = name;
+    this.surface = surface;
+    this.price = price;
+    this.picture = picture;
+    this.description = description;
   }
 
   // Getters and Setters
@@ -57,11 +72,11 @@ public class RentalRequestDTO {
     this.price = price;
   }
 
-  public String getPicture() {  //TO DO Url String -> Blob file ??
+  public MultipartFile getPicture() {
     return picture;
   }
 
-  public void setPicture(String picture) {
+  public void setPicture(MultipartFile picture) {
     this.picture = picture;
   }
 
@@ -73,11 +88,23 @@ public class RentalRequestDTO {
     this.description = description;
   }
 
-  /*public Integer getOwnerId() {
-    return ownerId;
+  @Override
+  public String toString() {
+    return (
+      "RentalRequestDTO{" +
+      "name='" +
+      name +
+      '\'' +
+      ", surface=" +
+      surface +
+      ", price=" +
+      price +
+      ", picture=" +
+      (picture != null ? picture.getOriginalFilename() : "null") +
+      ", description='" +
+      description +
+      '\'' +
+      '}'
+    );
   }
-
-  public void setOwnerId(Integer ownerId) {
-    this.ownerId = ownerId;
-  }*/
 }

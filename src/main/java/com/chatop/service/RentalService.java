@@ -71,18 +71,29 @@ public class RentalService {
    * @param rentalRequestDTO The DTO containing rental data.
    * @return The created Rental object.
    */
-  public Rental createRental(RentalRequestDTO rentalRequestDTO, String ownerEmail) {
+  public Rental createRental(
+    RentalRequestDTO rentalRequestDTO,
+    String ownerEmail
+  ) {
     // Fetch the owner from the database
-    User owner = userRepository.findByEmail(ownerEmail)
-    .orElseThrow(() -> new IllegalArgumentException("Owner not found with email: " + ownerEmail));
-
+    User owner = userRepository
+      .findByEmail(ownerEmail)
+      .orElseThrow(() ->
+        new IllegalArgumentException(
+          "Owner not found with email: " + ownerEmail
+        )
+      );
 
     // Map DTO to Entity
     Rental rental = new Rental();
     rental.setName(rentalRequestDTO.getName());
     rental.setSurface(rentalRequestDTO.getSurface());
     rental.setPrice(rentalRequestDTO.getPrice());
-    rental.setPicture(rentalRequestDTO.getPicture());
+    rental.setPicture(
+      rentalRequestDTO.getPicture() != null
+        ? rentalRequestDTO.getPicture().getOriginalFilename()
+        : null
+    );
     rental.setDescription(rentalRequestDTO.getDescription());
     rental.setOwner(owner);
     rental.setCreatedAt(LocalDateTime.now());
@@ -116,9 +127,12 @@ public class RentalService {
     if (rentalRequestDTO.getPrice() != null) {
       rental.setPrice(rentalRequestDTO.getPrice());
     }
-    if (rentalRequestDTO.getPicture() != null) {
-      rental.setPicture(rentalRequestDTO.getPicture());
-    }
+    rental.setPicture(
+      rentalRequestDTO.getPicture() != null
+        ? rentalRequestDTO.getPicture().getOriginalFilename()
+        : null
+    );
+
     if (rentalRequestDTO.getDescription() != null) {
       rental.setDescription(rentalRequestDTO.getDescription());
     }
