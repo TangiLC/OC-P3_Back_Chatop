@@ -1,21 +1,21 @@
 package com.chatop.controller;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.chatop.dto.RentalDTO;
 import com.chatop.dto.RentalRequestDTO;
@@ -75,63 +75,47 @@ public class RentalController {
   }
 
   /**
-   * Creates a new rental.
-   *
-   * @param rentalRequestDTO The DTO containing the details of the rental to be created.
-   * @return A ResponseEntity containing the created RentalDTO.
-   */
-  @PostMapping(value="/rentals", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<?> createRental(
-    @RequestPart("name") String name,
-    @RequestPart("surface") Integer surface,
-    @RequestPart("price") Integer price,
-    @RequestPart("picture") MultipartFile picture,
-    @RequestPart(value="description",required=false) String description,
-    @RequestHeader HttpHeaders headers
-  ) {
-    try {
-      String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-      if (
-        authorizationHeader == null ||
-        !authorizationHeader.startsWith("Bearer ")
-      ) {
-        return ResponseEntity
-          .status(401)
-          .body("Missing or invalid authorization token");
-      }
+     * Handles the creation of a new rental.
+     *
+     * @param rentalRequestDTO The rental data from the request.
+     * @param headers          The HTTP headers containing the Authorization token.
+     * @return A response indicating success or failure.
+     */
+    @PostMapping(value = "/rentals", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> createRental(
+            @ModelAttribute RentalRequestDTO rentalRequestDTO,
+            @RequestHeader HttpHeaders headers) {
+        try {
+            // Extract and validate the Authorization header
+            String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401)
+                        .body(Collections.singletonMap("error", "Missing or invalid authorization token"));
+            }
 
-      String token = authorizationHeader.substring(7);
-      if (!jwtUtil.validateToken(token)) {
-        return ResponseEntity.status(401).body("Invalid or expired token");
-      }
-      String email = jwtUtil.extractEmail(token);
-      String pictureUrl = null;
-        if (picture != null && !picture.isEmpty()) {
-            pictureUrl = picture.getOriginalFilename(); 
+            // Extract the token and validate it
+            String token = authorizationHeader.substring(7);
+            if (!jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(401)
+                        .body(Collections.singletonMap("error", "Invalid or expired token"));
+            }
+
+            // Extract owner email from the token
+            String ownerEmail = jwtUtil.extractEmail(token);
+
+            // Call the service to create the rental
+            rentalService.createRental(rentalRequestDTO, ownerEmail);
+
+            // Success response
+            return new ResponseEntity<>(Collections.singletonMap("message", "Rental created!"), HttpStatus.CREATED);
+
+        } catch (Exception e) {
+            // Handle errors and return a proper response
+            return new ResponseEntity<>(
+                    Collections.singletonMap("error", "Error while creating rental: " + e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
-      
-      RentalRequestDTO rentalRequestDTO = new RentalRequestDTO();
-      rentalRequestDTO.setName(name);
-      rentalRequestDTO.setSurface(surface);
-      rentalRequestDTO.setPrice(price);
-      rentalRequestDTO.setDescription(description);
-      rentalRequestDTO.setPicture(pictureUrl);
-
-      //Rental rental = 
-      rentalService.createRental(rentalRequestDTO, email);
-      
-      //RentalDTO rentalDTO = RentalDTO.fromEntity(rental);
-
-      return ResponseEntity.ok(Map.of("message", "Rental created!"));
-
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
-    } catch (RuntimeException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("An unexpected error occurred");
     }
-  }
 
   /**
    * Updates an existing rental by its ID.

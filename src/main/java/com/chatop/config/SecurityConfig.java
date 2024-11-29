@@ -26,7 +26,7 @@ public class SecurityConfig {
         auth
           .requestMatchers(
             "api/auth/**",
-            "api/rentals/**",
+            "api/rentals/**","api/rentals",
             "/public/**","api/user/**",
             "/v3/**","api/messages/**"
           )
