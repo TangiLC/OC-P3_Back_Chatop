@@ -6,7 +6,6 @@ import com.chatop.dto.RentalsResponseDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.service.RentalService;
 import com.chatop.service.UserService;
-import jakarta.validation.Valid;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -29,6 +28,7 @@ public class RentalController {
      * Constructs the RentalController.
      *
      * @param rentalService The service for managing rentals.
+     * @param userService The service for managing user.
      */
     public RentalController(RentalService rentalService, UserService userService) {
       this.rentalService = rentalService;
@@ -45,10 +45,8 @@ public class RentalController {
   public ResponseEntity<RentalsResponseDTO> getAllRentals(
     Authentication authentication
   ) {
-    // Retrieve the email of the authenticated user (optional, can be logged or used)
     String userEmail = authentication.getName();
 
-    // Fetch all rentals
     List<RentalDTO> rentalDTOs = rentalService.readAllRentalsAsDTO();
     RentalsResponseDTO rentalsObject = new RentalsResponseDTO(rentalDTOs);
 
@@ -67,10 +65,8 @@ public class RentalController {
     @PathVariable Integer id,
     Authentication authentication
   ) {
-    // Retrieve the email of the authenticated user (optional, can be logged or used)
     String userEmail = authentication.getName();
 
-    // Fetch the rental by ID
     RentalDTO rentalDTO = rentalService.readRentalAsDTO(id);
 
     return ResponseEntity.ok(rentalDTO);

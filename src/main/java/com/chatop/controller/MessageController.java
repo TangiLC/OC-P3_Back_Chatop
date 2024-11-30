@@ -1,8 +1,17 @@
 package com.chatop.controller;
 
+import com.chatop.dto.MessageResponseDTO;
+import com.chatop.dto.RentalsResponseDTO;
+import com.chatop.model.Message;
+import com.chatop.service.MessageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.chatop.dto.MessageResponseDTO;
-import com.chatop.model.Message;
-import com.chatop.service.MessageService;
 
 /**
  * Controller for managing messages.
@@ -41,6 +46,19 @@ public class MessageController {
    * @param authentication The current authenticated user.
    * @return A ResponseEntity containing a MessageResponseDTO with the created message content.
    */
+  @Operation(
+    summary = "Create a Message",
+    security = @SecurityRequirement(name = "bearerAuth")
+  )
+  @ApiResponse(
+    responseCode = "200",
+    description = "Message successfully sent",
+    content = @Content(
+      mediaType = "application/json",
+      examples = @ExampleObject(value = "{\"message\": \"success\"}")
+    )
+  )
+  @ApiResponse(responseCode = "401", description = "Unauthorized")
   @PostMapping
   public ResponseEntity<?> createMessage(
     @RequestBody Map<String, Object> payload,
@@ -74,13 +92,13 @@ public class MessageController {
         .body(Map.of("error", "An unexpected error occurred"));
     }
   }
-
+  /*  TO DO : upgrade messages routes
   /**
    * Retrieves all messages sent by a specific user.
    *
    * @param userId The ID of the user.
    * @return A ResponseEntity containing a list of messages sent by the user.
-   */
+  
   @GetMapping("/user/{userId}")
   public ResponseEntity<List<Message>> readMessagesByUserId(
     @PathVariable Integer userId
@@ -98,7 +116,7 @@ public class MessageController {
    *
    * @param rentalId The ID of the rental.
    * @return A ResponseEntity containing a list of messages related to the rental.
-   */
+   
   @GetMapping("/rental/{rentalId}")
   public ResponseEntity<List<Message>> readMessagesByRentalId(
     @PathVariable Integer rentalId
@@ -109,5 +127,5 @@ public class MessageController {
     } catch (RuntimeException e) {
       return ResponseEntity.status(404).body(null);
     }
-  }
+  }     */
 }

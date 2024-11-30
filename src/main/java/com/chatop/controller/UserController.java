@@ -69,10 +69,9 @@ public class UserController {
   public ResponseEntity<UserDTO> getAuthenticatedUser(
     Authentication authentication
   ) {
-    // Extract the email (or principal) of the authenticated user
+    
     String email = authentication.getName();
 
-    // Retrieve user details and convert them to a DTO
     UserDTO userDTO = userService.readUserByEmailAsDTO(email);
     return ResponseEntity.ok(userDTO);
   }
