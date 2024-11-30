@@ -6,36 +6,28 @@ import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
-import com.chatop.util.JwtUtil;
 import jakarta.validation.Valid;
-import java.util.Date;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 /**
- * Controller for managing user-related operations such as registration, login, and profile retrieval.
+ * Controller for managing user-related operations
+ *  such as registration, login, and profile retrieval.
  */
 @RestController
 @RequestMapping("/api")
 public class UserController {
 
   private final UserService userService;
-  private final JwtUtil jwtUtil;
 
   /**
    * Constructs the UserController.
    *
    * @param userService The service for managing users.
    */
-  public UserController(UserService userService, JwtUtil jwtUtil) {
+  public UserController(UserService userService) {
     this.userService = userService;
-    this.jwtUtil = jwtUtil;
   }
 
   /**
@@ -54,53 +46,33 @@ public class UserController {
   }
 
   /**
-   * Logs in a user.
-   * (For simplicity, this method just validates user credentials without issuing a token.)
+   * Logs in a user and returns a JWT token upon successful authentication.
    *
    * @param loginRequestDTO The DTO containing the user's login credentials.
-   * @return A ResponseEntity with a jwt token if the login is successful.
+   * @return A ResponseEntity with a JWT token if the login is successful.
    */
   @PostMapping("/auth/login")
   public ResponseEntity<LoginResponseDTO> loginUser(
     @Valid @RequestBody LoginRequestDTO loginRequestDTO
   ) {
     String token = userService.authenticateUser(loginRequestDTO);
-
-    //String token = "jwt";
     return ResponseEntity.ok(new LoginResponseDTO(token));
   }
 
   /**
-   * Retrieves the currently authenticated user's profile.
+   * Retrieves the currently authenticated user's profile using Spring Security's Authentication.
    *
-   * @param email The email of the authenticated user (simulated for now).
+   * @param authentication The Authentication object injected by Spring Security.
    * @return A ResponseEntity with the user's details as a DTO.
    */
   @GetMapping("/auth/me")
-  public ResponseEntity<?> getAuthenticatedUser(
-    @RequestHeader("Authorization") String authorizationHeader
+  public ResponseEntity<UserDTO> getAuthenticatedUser(
+    Authentication authentication
   ) {
-    if (
-      authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")
-    ) {
-      return ResponseEntity
-        .status(401)
-        .body(
-          "Authorization header missing or invalid format. Expected 'Bearer <token>'"
-        );
-    }
+    // Extract the email (or principal) of the authenticated user
+    String email = authentication.getName();
 
-    String token = authorizationHeader.substring(7); // -"Bearer "
-    if (!jwtUtil.validateToken(token)) {
-      Date expDate = jwtUtil.extractExpiration(token);
-      String errorMessage = String.format(
-        "Invalid or expired token: '%s'-'%s'",
-        token,
-        expDate
-      );
-      return ResponseEntity.status(401).body(errorMessage);
-    }
-    String email = jwtUtil.extractEmail(token);
+    // Retrieve user details and convert them to a DTO
     UserDTO userDTO = userService.readUserByEmailAsDTO(email);
     return ResponseEntity.ok(userDTO);
   }
