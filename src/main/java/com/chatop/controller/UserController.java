@@ -1,23 +1,29 @@
 package com.chatop.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.LoginResponseDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller for managing user-related operations
@@ -26,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @Tag(
-  name = "User Controller",
+  name = "1. User Controller",
   description = "Registration, login, and profile retrieval."
 )
 public class UserController {
@@ -74,7 +80,7 @@ public class UserController {
   @ApiResponses(
     value = {
       @ApiResponse(
-        responseCode = "200",
+        responseCode = "201",
         description = "👍User created successfully",
         content = @Content(
           mediaType = "application/json",
@@ -86,11 +92,11 @@ public class UserController {
         description = "❌User name, email & password required",
         content = @Content(mediaType = "text/plain")
       ),
-      /*  @ApiResponse(
+      @ApiResponse(
         responseCode = "404",
-        description = "User not found",
+        description = "🤔User not found",
         content = @Content(mediaType = "text/plain")
-      ),*/
+      ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
@@ -183,7 +189,7 @@ public class UserController {
     //security = {},
     summary = "Get user info",
     description = """
-       Retrieve user info from database using token as Authentication.
+       👤Retrieve user info from database using token as Authentication.
        \nemail is stored in token"""
     /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Login request with email and password",
@@ -247,7 +253,7 @@ public class UserController {
     //security = {},
     summary = "Get infos about user {id}",
     description = """
-       Retrieve user info from database using id.
+       💁Retrieve user info from database using id.
        \nid is integer, auto-incremented when saving in database"""
     /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Login request with email and password",
