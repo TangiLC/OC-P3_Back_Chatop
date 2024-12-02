@@ -1,16 +1,14 @@
 package com.chatop.service;
 
-import java.time.LocalDateTime;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.repository.UserRepository;
 import com.chatop.util.JwtUtil;
+import java.time.LocalDateTime;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -46,6 +44,7 @@ public class UserService {
     user.setName(userRequestDTO.getName().trim());
     user.setEmail(userRequestDTO.getEmail().trim());
     user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+    user.setRole("ROLE_USER");
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
 
@@ -153,7 +152,7 @@ public class UserService {
       );
     }
 
-    return jwtUtil.generateToken(user.getEmail());
+    return jwtUtil.generateToken(user.getEmail(),user.getRole());
   }
 
   /**

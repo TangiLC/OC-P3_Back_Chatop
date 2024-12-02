@@ -49,15 +49,17 @@ public class SecurityConfig {
           .requestMatchers(
             "/api/auth/**", // Login and registration
             "/public/**", // Public resources
-            "/v3/**" // API documentation or other open endpoints
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html" // API documentation
           )
           .permitAll()
           .requestMatchers(
-            "/api/rentals/**",  
+            "/api/rentals/**",
             "/api/messages/**",
             "/api/user/**"
           )
-          .authenticated()
+          .hasAnyRole("ADMIN","USER")
           .anyRequest()
           .authenticated();
       })

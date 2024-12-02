@@ -1,13 +1,12 @@
 package com.chatop.model;
 
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "USERS")
@@ -24,6 +23,9 @@ public class User {
 
   @Column(nullable = false)
   private String password;
+
+  @Column(nullable = false)
+  private String role;
 
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
@@ -61,6 +63,14 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getRole() {
+    return role;
+  }
+
+  public void setRole(String role) {
+    this.role = role;
   }
 
   public LocalDateTime getCreatedAt() {

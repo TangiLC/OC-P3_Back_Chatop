@@ -6,6 +6,14 @@ import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,6 +25,10 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api")
+@Tag(
+  name = "User Controller",
+  description = "Registration, login, and profile retrieval."
+)
 public class UserController {
 
   private final UserService userService;
@@ -36,13 +48,66 @@ public class UserController {
    * @param userRequestDTO The DTO containing the user's registration details.
    * @return A ResponseEntity with the created user's details as a DTO.
    */
+  @Operation(
+    security = {},
+    summary = "Register a new user",
+    description = """
+        🆕Registers a new user (name, email, password). Returns JWT Token on success.
+        \nemail syntax must contain *"@domain.suffix"* to be valid. 
+        \n⚙️password will be hashed (Spring security Bcrypt) before saving in database""",
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Register request with name, email and password",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        examples = @ExampleObject(
+          value = """
+                { "name":"newUser Test",
+                  "email": "user@example.com",
+                  "password": "password123!"
+                }
+                """
+        )
+      )
+    )
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "👍User created successfully",
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = LoginResponseDTO.class)
+        )
+      ),
+      @ApiResponse(
+        responseCode = "400",
+        description = "❌User name, email & password required",
+        content = @Content(mediaType = "text/plain")
+      ),
+      /*  @ApiResponse(
+        responseCode = "404",
+        description = "User not found",
+        content = @Content(mediaType = "text/plain")
+      ),*/
+      @ApiResponse(
+        responseCode = "500",
+        description = "🔧Internal server error",
+        content = @Content(mediaType = "text/plain")
+      ),
+    }
+  )
   @PostMapping("/auth/register")
-  public ResponseEntity<UserDTO> registerUser(
+  public ResponseEntity<LoginResponseDTO> registerUser(
     @Valid @RequestBody UserRequestDTO userRequestDTO
   ) {
     User createdUser = userService.createUser(userRequestDTO);
-    UserDTO userDTO = UserDTO.fromEntity(createdUser);
-    return ResponseEntity.ok(userDTO);
+    LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
+    loginRequestDTO.setEmail(createdUser.getEmail());
+    loginRequestDTO.setPassword(userRequestDTO.getPassword());
+    String token = userService.authenticateUser(loginRequestDTO);
+    return ResponseEntity.ok(new LoginResponseDTO(token));
   }
 
   /**
@@ -51,6 +116,55 @@ public class UserController {
    * @param loginRequestDTO The DTO containing the user's login credentials.
    * @return A ResponseEntity with a JWT token if the login is successful.
    */
+  @Operation(
+    security = {},
+    summary = "Login user",
+    description = """
+        🔐Log in user (email, password). Returns JWT Token on success.
+        \nemail syntax must contain *"@domain.suffix"* to be valid. 
+        \nCredentials (email,password) must be in database to be valid.""",
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Login request with email and password",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        examples = @ExampleObject(
+          value = """
+                { "email": "test@test.com",
+                  "password": "test31!"
+                }
+                """
+        )
+      )
+    )
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "👍User Logged successfully",
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = LoginResponseDTO.class)
+        )
+      ),
+      @ApiResponse(
+        responseCode = "400",
+        description = "❌password must match database",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "404",
+        description = "🕵🏻User not found in database",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "500",
+        description = "🔧Internal server error",
+        content = @Content(mediaType = "text/plain")
+      ),
+    }
+  )
   @PostMapping("/auth/login")
   public ResponseEntity<LoginResponseDTO> loginUser(
     @Valid @RequestBody LoginRequestDTO loginRequestDTO
@@ -65,14 +179,60 @@ public class UserController {
    * @param authentication The Authentication object injected by Spring Security.
    * @return A ResponseEntity with the user's details as a DTO.
    */
+  @Operation(
+    //security = {},
+    summary = "Get user info",
+    description = """
+       Retrieve user info from database using token as Authentication.
+       \nemail is stored in token"""
+    /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Login request with email and password",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        examples = @ExampleObject(
+          value = """
+                { "email": "test@test.com",
+                  "password": "test31!"
+                }
+                """
+        )
+      )
+    )*/
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "👍User infos Retrieved successfully",
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = UserDTO.class)
+        )
+      ),
+      @ApiResponse(
+        responseCode = "401",
+        description = "🧙‍♂️unauthorized",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "400",
+        description = "❌Bad Request",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "500",
+        description = "🔧Internal server error",
+        content = @Content(mediaType = "text/plain")
+      ),
+    }
+  )
   @GetMapping("/auth/me")
   public ResponseEntity<UserDTO> getAuthenticatedUser(
     Authentication authentication
   ) {
-    // Extract the email (or principal) of the authenticated user
     String email = authentication.getName();
 
-    // Retrieve user details and convert them to a DTO
     UserDTO userDTO = userService.readUserByEmailAsDTO(email);
     return ResponseEntity.ok(userDTO);
   }
@@ -83,6 +243,59 @@ public class UserController {
    * @param id The ID of the user to retrieve.
    * @return A ResponseEntity with the user's details as a DTO.
    */
+  @Operation(
+    //security = {},
+    summary = "Get infos about user {id}",
+    description = """
+       Retrieve user info from database using id.
+       \nid is integer, auto-incremented when saving in database"""
+    /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Login request with email and password",
+      required = true,
+      content = @Content(
+        mediaType = "application/json",
+        examples = @ExampleObject(
+          value = """
+                { "email": "test@test.com",
+                  "password": "test31!"
+                }
+                """
+        )
+      )
+    )*/
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "👍User infos Retrieved successfully",
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = UserDTO.class)
+        )
+      ),
+      @ApiResponse(
+        responseCode = "401",
+        description = "🧙‍♂️unauthorized (no token)",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "403",
+        description = "🧙‍♂️forbidden (no role)",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "400",
+        description = "❌Bad Request",
+        content = @Content(mediaType = "text/plain")
+      ),
+      @ApiResponse(
+        responseCode = "500",
+        description = "🔧Internal server error",
+        content = @Content(mediaType = "text/plain")
+      ),
+    }
+  )
   @GetMapping("/user/{id}")
   public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
     User user = userService.readUserById(id);
