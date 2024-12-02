@@ -60,16 +60,18 @@ public class MessageService {
       );
     }
 
-    // Create and save the message
     Message message = new Message();
     message.setMessage(messageContent);
     message.setUser(user);
     message.setRental(rental);
     message.setCreatedAt(LocalDateTime.now());
     message.setUpdatedAt(LocalDateTime.now());
-    System.out.println("******************service Message did run*****" + message);
+    
     return messageRepository.save(message);
   }
+
+
+// TO DO : Display message... 
 
   /**
    * Retrieves a message by its ID.
