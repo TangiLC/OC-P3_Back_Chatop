@@ -1,11 +1,5 @@
 package com.chatop.util;
 
-import java.util.Date;
-
-import javax.crypto.SecretKey;
-
-import org.springframework.stereotype.Component;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -15,6 +9,9 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
+import java.util.Date;
+import javax.crypto.SecretKey;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
@@ -23,23 +20,22 @@ public class JwtUtil {
   private final long expiration;
 
   public JwtUtil() {
-    // Génère une clé sécurisée dynamique pour HMAC-SHA-256
     this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-
-    // Définit la durée d'expiration du token (par exemple, 1 heure)
-    this.expiration = 3600000; // 1 heure en millisecondes
+    this.expiration = 3600000;
   }
 
   /**
-   * Génère un token JWT.
+   * Génère un token JWT containing email and role.
    *
    * @param email L'email de l'utilisateur.
+   * @param role  The user's role.
    * @return Le token JWT.
    */
-  public String generateToken(String email) {
+  public String generateToken(String email, String role) {
     return Jwts
       .builder()
       .setSubject(email)
+      .claim("role", role)
       .setIssuedAt(new Date())
       .setExpiration(new Date(System.currentTimeMillis() + expiration))
       .signWith(secretKey) // Utilise la clé générée
@@ -109,5 +105,21 @@ public class JwtUtil {
       System.err.println("JWT Token email error: " + e.getMessage());
     }
     return null;
+  }
+
+  /**
+   * Extracts the role from a JWT token.
+   *
+   * @param token The JWT token.
+   * @return The user's role or null if invalid.
+   */
+  public String extractRole(String token) {
+    try {
+      JwtParser parser = Jwts.parserBuilder().setSigningKey(secretKey).build();
+      Claims claims = parser.parseClaimsJws(token).getBody();
+      return claims.get("role", String.class);
+    } catch (Exception e) {
+      return null;
+    }
   }
 }

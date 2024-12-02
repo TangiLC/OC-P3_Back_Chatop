@@ -1,5 +1,7 @@
 package com.chatop.config;
 
+import com.chatop.filter.JwtAuthenticationFilter;
+import com.chatop.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,9 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.chatop.filter.JwtAuthenticationFilter;
-import com.chatop.util.JwtUtil;
 
 /**
  * Configuration for Spring Security, including JWT-based authentication.
@@ -50,15 +49,17 @@ public class SecurityConfig {
           .requestMatchers(
             "/api/auth/**", // Login and registration
             "/public/**", // Public resources
-            "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html" // API documentation
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html" // API documentation
           )
           .permitAll()
           .requestMatchers(
-            "/api/rentals/**",  
+            "/api/rentals/**",
             "/api/messages/**",
             "/api/user/**"
           )
-          .authenticated()
+          .hasAnyRole("ADMIN","USER")
           .anyRequest()
           .authenticated();
       })
