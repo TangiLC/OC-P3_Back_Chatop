@@ -1,7 +1,5 @@
 package com.chatop.controller;
 
-import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,16 +41,15 @@ public class MessageController {
   /**
    * Creates a new message. Authentication via Bearer JWT is handled by Spring Security.
    *
-   * @param @param messageRequestDTO The DTO containing the message content, user ID, and rental ID.
+   * @param messageRequestDTO The DTO containing the message content, user ID, and rental ID.
    * @param authentication The current authenticated user.
    * @return A ResponseEntity containing a MessageResponseDTO with the created message content.
    */
   @Operation(
-    //security = {},
     summary = "Create a Message",
     description = """
-       📬Create a message from a user to another.
-       \n""",
+            📬 Create a message from a user to a rental owner.
+            """,
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Message creation payload",
       required = true,
@@ -60,11 +57,12 @@ public class MessageController {
         mediaType = "application/json",
         examples = @ExampleObject(
           value = """
-                { "message": "New message !",
-                  "userId": 1,
-                  "rentalId":2
-                }
-                """
+                        {
+                            "message": "New message !",
+                            "userId": 1,
+                            "rentalId": 2
+                        }
+                        """
         )
       )
     )
@@ -73,7 +71,7 @@ public class MessageController {
     value = {
       @ApiResponse(
         responseCode = "200",
-        description = "📨Message sent successfully",
+        description = "📨 Message sent successfully",
         content = @Content(
           mediaType = "application/json",
           examples = @ExampleObject(value = "{\"message\": \"success\"}")
@@ -81,54 +79,44 @@ public class MessageController {
       ),
       @ApiResponse(
         responseCode = "400",
-        description = "❌Bad Request (key missing in body)",
-        content = @Content(
-          mediaType = "application/json",
-          examples = @ExampleObject(value = "{}")
-        )
+        description = "❌ Bad Request (key missing in body)",
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "401",
-        description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
+        description = "🧙‍♂️ Unauthorized (no token)",
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "403",
-        description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        description = "🧙‍♂️ Forbidden (no role)",
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
-        description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        description = "🔧 Internal server error",
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
   @PostMapping
-  public ResponseEntity<?> createMessage(
+  public ResponseEntity<MessageResponseDTO> createMessage(
     @Valid @RequestBody MessageRequestDTO messageRequestDTO,
     Authentication authentication
   ) {
-    try {
-      String userEmail = authentication.getName();
+    // Get the email of the authenticated user
+    String userEmail = authentication.getName();
 
-      messageService.createMessage(
-        messageRequestDTO.getMessage(),
-        messageRequestDTO.getUserId(),
-        messageRequestDTO.getRentalId()
-      );
+    // Delegate the creation to the service
+    messageService.createMessage(
+      messageRequestDTO.getMessage(),
+      messageRequestDTO.getUserId(),
+      messageRequestDTO.getRentalId()
+    );
 
-      return ResponseEntity.ok(
-        new MessageResponseDTO("Message sent successfully")
-      );
-    } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-    } catch (RuntimeException e) {
-      return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
-    } catch (Exception e) {
-      return ResponseEntity
-        .status(500)
-        .body(Map.of("error", "An unexpected error occurred"));
-    }
+    // Return a success response
+    return ResponseEntity.ok(
+      new MessageResponseDTO("Message sent successfully")
+    );
   }
 }

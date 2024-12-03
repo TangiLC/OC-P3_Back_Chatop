@@ -1,5 +1,6 @@
 package com.chatop.controller;
 
+import com.chatop.exception.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -74,7 +75,7 @@ public class ImageController {
     }
   )*/
   @GetMapping("/{filename}")
-  public ResponseEntity<?> getImage(
+  public ResponseEntity<Resource> getImage(
     @PathVariable String filename
     //Authentication authentication
   ) {
@@ -85,9 +86,7 @@ public class ImageController {
       Resource resource = new UrlResource(filePath.toUri());
 
       if (!resource.exists() || !resource.isReadable()) {
-        return ResponseEntity
-          .status(404)
-          .body(Map.of("error", "Image not found"));
+        throw new ResourceNotFoundException("Image not found: " + filename);
       }
 
       return ResponseEntity
@@ -98,13 +97,9 @@ public class ImageController {
         )
         .body(resource);
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-    } catch (RuntimeException e) {
-      return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+      throw new IllegalArgumentException("Invalid filename: " + filename, e);
     } catch (Exception e) {
-      return ResponseEntity
-        .status(500)
-        .body(Map.of("error", "An unexpected error occurred"));
+      throw new RuntimeException("Error retrieving image: " + filename, e);
     }
   }
 }

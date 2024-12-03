@@ -2,9 +2,12 @@ package com.chatop.exception;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,72 +15,136 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
- * Global exception handler for managing various types of exceptions throughout the application.
+ * Global exception handler for managing various types of exceptions across the application.
+ * This ensures consistent error messages and formats.
  */
 @ControllerAdvice
 public class GlobalHandler {
 
   /**
    * Handles database access errors.
-   *
-   * @param ex The DataAccessException thrown by the database layer.
-   * @return A ResponseEntity with an appropriate error message and HTTP status code.
    */
   @ExceptionHandler(DataAccessException.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ResponseEntity<String> handleDatabaseExceptions(
+  public ResponseEntity<Map<String, Object>> handleDatabaseExceptions(
     DataAccessException ex
   ) {
-    return ResponseEntity
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .body(
-        "An error occurred while accessing the database. Please try again later."
-      );
+    return buildErrorResponse(
+      "500 - DATABASE_ERROR",
+      "An error occurred while accessing the database. Please try again later.",
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
   }
 
   /**
-   * Handles invalid data exceptions (e.g., illegal arguments).
-   *
-   * @param ex The IllegalArgumentException thrown when invalid data is provided.
-   * @return A ResponseEntity with the exception's message and HTTP status code.
+   * Handles illegal argument errors.
    */
   @ExceptionHandler(IllegalArgumentException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ResponseEntity<String> handleIllegalArgumentExceptions(
+  public ResponseEntity<Map<String, Object>> handleIllegalArgumentExceptions(
     IllegalArgumentException ex
   ) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    return buildErrorResponse(
+      "400 - INVALID_ARGUMENT",
+      ex.getMessage(),
+      HttpStatus.BAD_REQUEST
+    );
   }
 
   /**
    * Handles validation errors for DTOs.
-   *
-   * @param ex The MethodArgumentNotValidException thrown when validation fails.
-   * @return A ResponseEntity containing a map of field-specific error messages and HTTP status code.
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ResponseEntity<Map<String, String>> handleValidationErrors(
+  public ResponseEntity<Map<String, Object>> handleValidationErrors(
     MethodArgumentNotValidException ex
   ) {
-    Map<String, String> errors = new HashMap<>();
+    Map<String, String> fieldErrors = new HashMap<>();
     for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-      errors.put(error.getField(), error.getDefaultMessage());
+      fieldErrors.put(error.getField(), error.getDefaultMessage());
     }
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+
+    Map<String, Object> errorResponse = new HashMap<>();
+    errorResponse.put("code", "400 - VALIDATION_ERROR");
+    errorResponse.put("message", "Validation failed for the provided data.");
+    errorResponse.put("details", fieldErrors);
+    errorResponse.put("timestamp", System.currentTimeMillis());
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
   /**
-   * Handles general exceptions not specifically covered by other handlers.
-   *
-   * @param ex The Exception thrown by the application.
-   * @return A ResponseEntity with a generic error message and HTTP status code.
+   * Handles authentication errors.
+   */
+  @ExceptionHandler(AuthenticationCredentialsNotFoundException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ResponseEntity<Map<String, Object>> handleAuthenticationExceptions(
+    AuthenticationCredentialsNotFoundException ex
+  ) {
+    return buildErrorResponse(
+      "401 - UNAUTHORIZED",
+      "Authentication is required to access this resource. Please log in.",
+      HttpStatus.UNAUTHORIZED
+    );
+  }
+
+  /**
+   * Handles access denial errors.
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ResponseEntity<Map<String, Object>> handleAccessDeniedExceptions(
+    AccessDeniedException ex
+  ) {
+    return buildErrorResponse(
+      "403 - ACCESS_DENIED",
+      "You do not have the necessary permissions to access this resource.",
+      HttpStatus.FORBIDDEN
+    );
+  }
+
+  /**
+   * Handles resource not found errors.
+   */
+  @ExceptionHandler(ResourceNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(
+    ResourceNotFoundException ex
+  ) {
+    return buildErrorResponse(
+      "404 - RESOURCE_NOT_FOUND",
+      ex.getMessage(),
+      HttpStatus.NOT_FOUND
+    );
+  }
+
+  /**
+   * Handles general exceptions.
    */
   @ExceptionHandler(Exception.class)
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  public ResponseEntity<String> handleGeneralExceptions(Exception ex) {
-    return ResponseEntity
-      .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .body("An unexpected error occurred. Please contact support.");
+  public ResponseEntity<Map<String, Object>> handleGeneralExceptions(
+    Exception ex
+  ) {
+    return buildErrorResponse(
+      "500 - GENERAL_ERROR",
+      "An unexpected error occurred. Please contact support.",
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+
+  /**
+   * Utility method to build a standardized error response.
+   */
+  private ResponseEntity<Map<String, Object>> buildErrorResponse(
+    String code,
+    String message,
+    HttpStatus httpStatus
+  ) {
+    Map<String, Object> errorResponse = new HashMap<>();
+    errorResponse.put("code", code);
+    errorResponse.put("message", message);
+    //errorResponse.put("timestamp", System.currentTimeMillis());
+    return ResponseEntity.status(httpStatus).body(errorResponse);
   }
 }

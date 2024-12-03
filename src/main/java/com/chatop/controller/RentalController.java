@@ -19,6 +19,7 @@ import com.chatop.dto.RentalDTO;
 import com.chatop.dto.RentalRequestDTO;
 import com.chatop.dto.RentalsResponseDTO;
 import com.chatop.dto.UserDTO;
+import com.chatop.exception.ResourceNotFoundException;
 import com.chatop.service.RentalService;
 import com.chatop.service.UserService;
 
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 /**
  * Controller for managing rental-related operations such as retrieval, creation, and updates.
@@ -81,22 +83,22 @@ public class RentalController {
       @ApiResponse(
         responseCode = "400",
         description = "❌Bad Request",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "403",
         description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -107,9 +109,8 @@ public class RentalController {
     String userEmail = authentication.getName();
 
     List<RentalDTO> rentalDTOs = rentalService.readAllRentalsAsDTO();
-    RentalsResponseDTO rentalsObject = new RentalsResponseDTO(rentalDTOs);
 
-    return ResponseEntity.ok(rentalsObject);
+    return ResponseEntity.ok(new RentalsResponseDTO(rentalDTOs));
   }
 
   /**
@@ -137,27 +138,27 @@ public class RentalController {
       @ApiResponse(
         responseCode = "400",
         description = "❌Bad Request",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "403",
         description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "404",
         description = "🤔Data not found",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -169,7 +170,11 @@ public class RentalController {
     String userEmail = authentication.getName();
 
     RentalDTO rentalDTO = rentalService.readRentalAsDTO(id);
-
+    if (rentalDTO == null) {
+      throw new ResourceNotFoundException(
+        "Rental with ID " + id + " not found"
+      );
+    }
     return ResponseEntity.ok(rentalDTO);
   }
 
@@ -209,22 +214,22 @@ public class RentalController {
       @ApiResponse(
         responseCode = "400",
         description = "❌Field missing",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "403",
         description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -233,26 +238,15 @@ public class RentalController {
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE
   )
   public ResponseEntity<Object> createRental(
-    @ModelAttribute RentalRequestDTO rentalRequestDTO,
+    @Valid @ModelAttribute RentalRequestDTO rentalRequestDTO,
     Authentication authentication
   ) {
-    try {
-      String ownerEmail = authentication.getName();
-      rentalService.createRental(rentalRequestDTO, ownerEmail);
+    String ownerEmail = authentication.getName();
+    rentalService.createRental(rentalRequestDTO, ownerEmail);
 
-      return ResponseEntity
-        .status(HttpStatus.CREATED)
-        .body(Collections.singletonMap("message", "Rental created!"));
-    } catch (Exception e) {
-      return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(
-          Collections.singletonMap(
-            "error",
-            "Error while creating rental: " + e.getMessage()
-          )
-        );
-    }
+    return ResponseEntity
+      .status(HttpStatus.CREATED)
+      .body(Collections.singletonMap("message", "Rental created!"));
   }
 
   /**
@@ -289,22 +283,22 @@ public class RentalController {
       @ApiResponse(
         responseCode = "400",
         description = "❌Field missing",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "403",
         description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -314,27 +308,16 @@ public class RentalController {
   )
   public ResponseEntity<Object> updateRental(
     @PathVariable Integer id,
-    @ModelAttribute RentalRequestDTO rentalRequestDTO,
+    @Valid @ModelAttribute RentalRequestDTO rentalRequestDTO,
     Authentication authentication
   ) {
-    try {
-      String ownerEmail = authentication.getName();
-      UserDTO userDTO = userService.readUserByEmailAsDTO(ownerEmail);
+    String ownerEmail = authentication.getName();
+    UserDTO userDTO = userService.readUserByEmailAsDTO(ownerEmail);
 
-      rentalService.updateRental(id, rentalRequestDTO, userDTO.getId());
+    rentalService.updateRental(id, rentalRequestDTO, userDTO.getId());
 
-      return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(Collections.singletonMap("message", "Rental updated!"));
-    } catch (Exception e) {
-      return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(
-          Collections.singletonMap(
-            "error",
-            "Error while updating rental: " + e.getMessage()
-          )
-        );
-    }
+    return ResponseEntity.ok(
+      Collections.singletonMap("message", "Rental updated!")
+    );
   }
 }

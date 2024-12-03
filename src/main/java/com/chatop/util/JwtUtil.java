@@ -1,5 +1,13 @@
 package com.chatop.util;
 
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Component;
+
+import com.chatop.exception.JwtValidationException;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -9,9 +17,6 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
-import java.util.Date;
-import javax.crypto.SecretKey;
-import org.springframework.stereotype.Component;
 
 @Component
 public class JwtUtil {
@@ -25,10 +30,10 @@ public class JwtUtil {
   }
 
   /**
-   * Génère un token JWT containing email and role.
+   * Génère un token JWT contenant l'email et le rôle de l'utilisateur.
    *
    * @param email L'email de l'utilisateur.
-   * @param role  The user's role.
+   * @param role  Le rôle de l'utilisateur.
    * @return Le token JWT.
    */
   public String generateToken(String email, String role) {
@@ -38,7 +43,7 @@ public class JwtUtil {
       .claim("role", role)
       .setIssuedAt(new Date())
       .setExpiration(new Date(System.currentTimeMillis() + expiration))
-      .signWith(secretKey) // Utilise la clé générée
+      .signWith(secretKey)
       .compact();
   }
 
@@ -47,6 +52,7 @@ public class JwtUtil {
    *
    * @param token Le token JWT.
    * @return true si le token est valide, sinon false.
+   * @throws JwtValidationException En cas d'erreur de validation du token.
    */
   public boolean validateToken(String token) {
     try {
@@ -54,22 +60,22 @@ public class JwtUtil {
       parser.parseClaimsJws(token);
       return true;
     } catch (ExpiredJwtException e) {
-      System.err.println("expired Token: " + e.getMessage());
+      throw new JwtValidationException("Token expired", e);
     } catch (MalformedJwtException e) {
-      System.err.println("malformed Token: " + e.getMessage());
+      throw new JwtValidationException("Token malformed", e);
     } catch (UnsupportedJwtException e) {
-      System.err.println("unsupported Jwt: " + e.getMessage());
+      throw new JwtValidationException("Token unsupported", e);
     } catch (JwtException e) {
-      System.err.println("JWT treatment exception: " + e.getMessage());
+      throw new JwtValidationException("Token validation error", e);
     }
-    return false;
   }
 
   /**
    * Extrait la date d'expiration du token JWT.
    *
    * @param token Le token JWT.
-   * @return La date d'expiration ou null si le token est invalide.
+   * @return La date d'expiration.
+   * @throws JwtValidationException En cas d'erreur de validation du token.
    */
   public Date extractExpiration(String token) {
     try {
@@ -81,45 +87,62 @@ public class JwtUtil {
         .getBody()
         .getExpiration();
     } catch (ExpiredJwtException e) {
-      System.err.println("expired Token @expExtract: " + e.getMessage());
+      throw new JwtValidationException(
+        "Token expired while extracting expiration",
+        e
+      );
     } catch (JwtException e) {
-      System.err.println("JWT Token expiration date error: " + e.getMessage());
+      throw new JwtValidationException(
+        "Error extracting expiration from token",
+        e
+      );
     }
-    return null;
   }
 
   /**
-   * Extrait l'email de l'utilisateur à partir d'un token JWT.
+   * Extrait l'email de l'utilisateur depuis le token JWT.
    *
    * @param token Le token JWT.
-   * @return L'email de l'utilisateur ou null si le token est invalide.
+   * @return L'email de l'utilisateur.
+   * @throws JwtValidationException En cas d'erreur de validation du token.
    */
   public String extractEmail(String token) {
     try {
-      JwtParser parser = Jwts.parserBuilder().setSigningKey(secretKey).build();
-      Claims claims = parser.parseClaimsJws(token).getBody();
+      Claims claims = Jwts
+        .parserBuilder()
+        .setSigningKey(secretKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
       return claims.getSubject();
     } catch (ExpiredJwtException e) {
-      System.err.println("expired Token @mailExtract: " + e.getMessage());
+      throw new JwtValidationException(
+        "Token expired while extracting email",
+        e
+      );
     } catch (JwtException e) {
-      System.err.println("JWT Token email error: " + e.getMessage());
+      throw new JwtValidationException("Error extracting email from token", e);
     }
-    return null;
   }
 
   /**
-   * Extracts the role from a JWT token.
+   * Extrait le rôle de l'utilisateur depuis le token JWT.
    *
-   * @param token The JWT token.
-   * @return The user's role or null if invalid.
+   * @param token Le token JWT.
+   * @return Le rôle de l'utilisateur.
+   * @throws JwtValidationException En cas d'erreur de validation du token.
    */
   public String extractRole(String token) {
     try {
-      JwtParser parser = Jwts.parserBuilder().setSigningKey(secretKey).build();
-      Claims claims = parser.parseClaimsJws(token).getBody();
+      Claims claims = Jwts
+        .parserBuilder()
+        .setSigningKey(secretKey)
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
       return claims.get("role", String.class);
-    } catch (Exception e) {
-      return null;
+    } catch (JwtException e) {
+      throw new JwtValidationException("Error extracting role from token", e);
     }
   }
 }
