@@ -1,14 +1,16 @@
 package com.chatop.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.chatop.dto.RentalDTO;
 import com.chatop.dto.RentalRequestDTO;
 import com.chatop.model.Rental;
 import com.chatop.model.User;
 import com.chatop.repository.RentalRepository;
 import com.chatop.repository.UserRepository;
-import java.time.LocalDateTime;
-import java.util.List;
-import org.springframework.stereotype.Service;
 
 /**
  * Service for managing rentals, including creation, update, and retrieval.
@@ -18,19 +20,16 @@ public class RentalService {
 
   private final RentalRepository rentalRepository;
   private final UserRepository userRepository;
+  private final ImageStorageService imageStorageService;
 
-  /**
-   * Constructs the RentalService.
-   *
-   * @param rentalRepository The repository for managing rentals.
-   * @param userRepository   The repository for managing users.
-   */
   public RentalService(
     RentalRepository rentalRepository,
-    UserRepository userRepository
+    UserRepository userRepository,
+    ImageStorageService imageStorageService
   ) {
     this.rentalRepository = rentalRepository;
     this.userRepository = userRepository;
+    this.imageStorageService = imageStorageService;
   }
 
   /**
@@ -78,17 +77,33 @@ public class RentalService {
           "Owner not found with email: " + ownerEmail
         )
       );
+    String pictureUrl = null;
+    if (
+      rentalRequestDTO.getPicture() != null &&
+      !rentalRequestDTO.getPicture().isEmpty()
+    ) {
+      try {
+        pictureUrl =
+          imageStorageService.saveImage(rentalRequestDTO.getPicture());
+      } catch (Exception e) {
+        throw new IllegalStateException(
+          "Error while saving picture: " + e.getMessage(),
+          e
+        );
+      }
+    }
 
     // Map DTO to Entity
     Rental rental = new Rental();
     rental.setName(rentalRequestDTO.getName());
     rental.setSurface(rentalRequestDTO.getSurface());
     rental.setPrice(rentalRequestDTO.getPrice());
-    rental.setPicture(
+    /*rental.setPicture(
       rentalRequestDTO.getPicture() != null
         ? rentalRequestDTO.getPicture().getOriginalFilename()
         : null
-    );
+    );*/
+    rental.setPicture(pictureUrl);
     rental.setDescription(rentalRequestDTO.getDescription());
     rental.setOwner(owner);
     rental.setCreatedAt(LocalDateTime.now());

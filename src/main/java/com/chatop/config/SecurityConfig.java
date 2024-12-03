@@ -50,7 +50,7 @@ public class SecurityConfig {
           .requestMatchers(
             "/api/auth/**", // Login and registration
             "/public/**", // Public resources
-            "/pictures/**",
+            "/images/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html" // API documentation
@@ -60,6 +60,7 @@ public class SecurityConfig {
             "/api/rentals/**",
             "/api/messages/**",
             "/api/user/**"
+            
           )
           .hasAnyRole("ADMIN","USER")
           .anyRequest()
