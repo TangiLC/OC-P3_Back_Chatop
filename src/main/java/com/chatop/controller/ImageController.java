@@ -1,5 +1,6 @@
 package com.chatop.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,10 +23,11 @@ import org.springframework.web.bind.annotation.RestController;
  * Controller for serving image files with authentication.
  */
 @RestController
-@Tag(
-  name = "* Image Controller",
-  description = "Serve authenticated image requests"
-)
+/*@Tag(
+  name = "4. Image Controller",
+  description = "Serve image requests"
+)*/
+@Hidden
 @RequestMapping("/images")
 public class ImageController {
 
@@ -39,11 +41,12 @@ public class ImageController {
    * @param authentication The current authenticated user.
    * @return A ResponseEntity containing the requested image or an appropriate error response.
    */
-  @Operation(
+  /*@Operation(
+    security={},
     summary = "Get an image file",
     description = """
             📸Retrieve an image file based on its filename.
-            This endpoint requires authentication via Bearer JWT token.
+            
             """
   )
   @ApiResponses(
@@ -58,16 +61,6 @@ public class ImageController {
         description = "❌Bad Request",
         content = @Content(mediaType = "application/json")
       ),
-      /*@ApiResponse(
-        responseCode = "401",
-        description = "🧙‍♂️Unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
-      ),
-      @ApiResponse(
-        responseCode = "403",
-        description = "🧙‍♂️Forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
-      ),*/
       @ApiResponse(
         responseCode = "404",
         description = "🔎Image not found",
@@ -79,7 +72,7 @@ public class ImageController {
         content = @Content(mediaType = "text/plain")
       ),
     }
-  )
+  )*/
   @GetMapping("/{filename}")
   public ResponseEntity<?> getImage(
     @PathVariable String filename
