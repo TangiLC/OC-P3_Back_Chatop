@@ -22,7 +22,7 @@ public class RentalRequestDTO {
   @Min(value = 1, message = "Rental price must be greater than 0")
   private Integer price;
 
-  @NotBlank(message = "Rental picture URL is required")
+  //@NotBlank(message = "Rental picture URL is required")
   private MultipartFile picture;
 
   private String description;

@@ -48,7 +48,6 @@ public class SwaggerConfig {
       .components(
         new io.swagger.v3.oas.models.Components()
           .addSecuritySchemes("bearerAuth", securityScheme)
-      )
-      ;
+      );
   }
 }

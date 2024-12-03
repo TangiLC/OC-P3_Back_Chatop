@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import io.jsonwebtoken.JwtException;
+
 /**
  * Global exception handler for managing various types of exceptions across the application.
  * This ensures consistent error messages and formats.
  */
 @ControllerAdvice
-public class GlobalHandler {
+public class GlobalHandlerException {
 
   /**
    * Handles database access errors.
@@ -48,6 +50,21 @@ public class GlobalHandler {
       "400 - INVALID_ARGUMENT",
       ex.getMessage(),
       HttpStatus.BAD_REQUEST
+    );
+  }
+
+  /**
+   * Handles invalid input exceptions.
+   */
+  @ExceptionHandler(InvalidInputException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ResponseEntity<Map<String, Object>> handleInvalidInputException(
+    InvalidInputException ex
+  ) {
+    return buildErrorResponse(
+      "401 - UNAUTHORIZED",
+      ex.getMessage(),
+      HttpStatus.UNAUTHORIZED
     );
   }
 
@@ -84,6 +101,21 @@ public class GlobalHandler {
     return buildErrorResponse(
       "401 - UNAUTHORIZED",
       "Authentication is required to access this resource. Please log in.",
+      HttpStatus.UNAUTHORIZED
+    );
+  }
+
+  /**
+   * Handles JWT-specific errors, such as token expiration or invalid signature.
+   */
+  @ExceptionHandler(JwtException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ResponseEntity<Map<String, Object>> handleJwtException(
+    JwtException ex
+  ) {
+    return buildErrorResponse(
+      "401 - UNAUTHORIZED",
+      "Invalid or expired token. Please log in again.",
       HttpStatus.UNAUTHORIZED
     );
   }

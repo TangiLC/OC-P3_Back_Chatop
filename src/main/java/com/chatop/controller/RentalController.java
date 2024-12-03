@@ -122,7 +122,7 @@ public class RentalController {
    */
   @Operation(
     //security = {},
-    summary = "Get the rental with id {id}",
+    summary = "Get the data of {id}",
     description = "🏠Retrieve data about the rental #id."
   )
   @ApiResponses(
@@ -260,7 +260,7 @@ public class RentalController {
   @Operation(
     //security = {},
     summary = "Updating rental {id}",
-    description = "📝Updates rental in database using id.",
+    description = "📝Updates rental #id in database.",
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Update request with name, surface, price, picture url and description",
       required = true,

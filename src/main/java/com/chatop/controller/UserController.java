@@ -94,21 +94,6 @@ public class UserController {
         content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
-        responseCode = "401",
-        description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "application/json")
-      ),
-      @ApiResponse(
-        responseCode = "403",
-        description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "application/json")
-      ),
-      @ApiResponse(
-        responseCode = "404",
-        description = "🤔User not found",
-        content = @Content(mediaType = "application/json")
-      ),
-      @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
         content = @Content(mediaType = "application/json")
@@ -169,8 +154,8 @@ public class UserController {
         )
       ),
       @ApiResponse(
-        responseCode = "400",
-        description = "❌password must match database",
+        responseCode = "401",
+        description = "❌invalid credentials email/password",
         content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
@@ -221,11 +206,6 @@ public class UserController {
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "application/json")
-      ),
-      @ApiResponse(
-        responseCode = "403",
-        description = "🧙‍♂️forbidden (no role)",
         content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
