@@ -40,8 +40,8 @@ ALTER TABLE `MESSAGES` ADD FOREIGN KEY (`rental_id`) REFERENCES `RENTALS` (`id`)
 
 INSERT INTO `USERS` (`email`, `name`, `password`, `created_at`, `updated_at`, `role`)
 VALUES 
-  ('admin@test.com', 'Admin TEST', 'admin123!', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ROLE_ADMIN'),
-  ('test@test.com', 'Test TEST', 'test!31', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ROLE_USER');
+  ('admin@test.com', 'Admin TEST', '$2a$10$yh/P1pJaW5Rca7l/8Zxjx.QRpmPgQt68eom1qtIgB9.zdsdaKArtS', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ROLE_ADMIN'),
+  ('test@test.com', 'Test TEST', '$2a$10$ZVzzAxdDMFyDYNZOc1enX.Jk/D2KEvvOdRTsH46ZezJydPYVIsJsK', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'ROLE_USER');
 
 
 INSERT INTO `RENTALS` (`name`, `surface`, `price`, `picture`, `description`, `owner_id`, `created_at`, `updated_at`)
