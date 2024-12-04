@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.chatop.exception.InvalidInputException;
+import com.chatop.exception.ResourceNotFoundException;
 import com.chatop.model.Message;
 import com.chatop.model.Rental;
 import com.chatop.model.User;
@@ -12,6 +14,9 @@ import com.chatop.repository.MessageRepository;
 import com.chatop.repository.RentalRepository;
 import com.chatop.repository.UserRepository;
 
+/**
+ * Service for managing messages.
+ */
 @Service
 public class MessageService {
 
@@ -36,29 +41,31 @@ public class MessageService {
    * @param userId The ID of the user sending the message.
    * @param rentalId The ID of the rental associated with the message.
    * @return The created message.
-   * @throws RuntimeException         If the user_id or rental_id cannot be found.
-   * @throws IllegalArgumentException If the message content is null or empty.
+   * @throws InvalidInputException If the message content is null or empty.
+   * @throws ResourceNotFoundException If the user or rental is not found.
    */
   public Message createMessage(
     String messageContent,
     Integer userId,
     Integer rentalId
   ) {
-    User user = userRepository
-      .findById(userId)
-      .orElseThrow(() ->
-        new RuntimeException("User not found with ID: " + userId)
-      );
-    Rental rental = rentalRepository
-      .findById(rentalId)
-      .orElseThrow(() ->
-        new RuntimeException("Rental not found with ID: " + rentalId)
-      );
     if (messageContent == null || messageContent.trim().isEmpty()) {
-      throw new IllegalArgumentException(
+      throw new InvalidInputException(
         "Message content cannot be null or empty."
       );
     }
+
+    User user = userRepository
+      .findById(userId)
+      .orElseThrow(() ->
+        new ResourceNotFoundException("User not found with ID: " + userId)
+      );
+
+    Rental rental = rentalRepository
+      .findById(rentalId)
+      .orElseThrow(() ->
+        new ResourceNotFoundException("Rental not found with ID: " + rentalId)
+      );
 
     Message message = new Message();
     message.setMessage(messageContent);
@@ -66,24 +73,22 @@ public class MessageService {
     message.setRental(rental);
     message.setCreatedAt(LocalDateTime.now());
     message.setUpdatedAt(LocalDateTime.now());
-    
+
     return messageRepository.save(message);
   }
-
-
-// TO DO : Display message... 
 
   /**
    * Retrieves a message by its ID.
    *
    * @param id The ID of the message to retrieve.
    * @return The message object.
+   * @throws ResourceNotFoundException If the message is not found.
    */
   public Message readMessageById(Integer id) {
     return messageRepository
       .findById(id)
       .orElseThrow(() ->
-        new RuntimeException("Message not found with ID: " + id)
+        new ResourceNotFoundException("Message not found with ID: " + id)
       );
   }
 
@@ -92,10 +97,11 @@ public class MessageService {
    *
    * @param userId The ID of the user whose messages to retrieve.
    * @return A list of messages sent by the user.
+   * @throws ResourceNotFoundException If the user is not found.
    */
   public List<Message> readMessagesByUserId(Integer userId) {
     if (!userRepository.existsById(userId)) {
-      throw new RuntimeException("User not found with ID: " + userId);
+      throw new ResourceNotFoundException("User not found with ID: " + userId);
     }
     return messageRepository.findByUserId(userId);
   }
@@ -105,10 +111,13 @@ public class MessageService {
    *
    * @param rentalId The ID of the rental whose messages to retrieve.
    * @return A list of messages related to the rental.
+   * @throws ResourceNotFoundException If the rental is not found.
    */
   public List<Message> readMessagesByRentalId(Integer rentalId) {
     if (!rentalRepository.existsById(rentalId)) {
-      throw new RuntimeException("Rental not found with ID: " + rentalId);
+      throw new ResourceNotFoundException(
+        "Rental not found with ID: " + rentalId
+      );
     }
     return messageRepository.findByRentalId(rentalId);
   }

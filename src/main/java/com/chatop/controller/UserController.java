@@ -13,6 +13,7 @@ import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.LoginResponseDTO;
 import com.chatop.dto.UserDTO;
 import com.chatop.dto.UserRequestDTO;
+import com.chatop.exception.ResourceNotFoundException;
 import com.chatop.model.User;
 import com.chatop.service.UserService;
 
@@ -90,17 +91,12 @@ public class UserController {
       @ApiResponse(
         responseCode = "400",
         description = "❌User name, email & password required",
-        content = @Content(mediaType = "text/plain")
-      ),
-      @ApiResponse(
-        responseCode = "404",
-        description = "🤔User not found",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -109,6 +105,9 @@ public class UserController {
     @Valid @RequestBody UserRequestDTO userRequestDTO
   ) {
     User createdUser = userService.createUser(userRequestDTO);
+    if (createdUser == null) {
+      throw new RuntimeException("User creation failed.");
+    }
     LoginRequestDTO loginRequestDTO = new LoginRequestDTO();
     loginRequestDTO.setEmail(createdUser.getEmail());
     loginRequestDTO.setPassword(userRequestDTO.getPassword());
@@ -155,19 +154,19 @@ public class UserController {
         )
       ),
       @ApiResponse(
-        responseCode = "400",
-        description = "❌password must match database",
-        content = @Content(mediaType = "text/plain")
+        responseCode = "401",
+        description = "❌invalid credentials email/password",
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "404",
         description = "🕵🏻User not found in database",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
@@ -176,6 +175,9 @@ public class UserController {
     @Valid @RequestBody LoginRequestDTO loginRequestDTO
   ) {
     String token = userService.authenticateUser(loginRequestDTO);
+    if (token == null) {
+      throw new ResourceNotFoundException("Invalid email/password");
+    }
     return ResponseEntity.ok(new LoginResponseDTO(token));
   }
 
@@ -186,89 +188,10 @@ public class UserController {
    * @return A ResponseEntity with the user's details as a DTO.
    */
   @Operation(
-    //security = {},
     summary = "Get user info",
     description = """
        👤Retrieve user info from database using token as Authentication.
        \nemail is stored in token"""
-    /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Login request with email and password",
-      required = true,
-      content = @Content(
-        mediaType = "application/json",
-        examples = @ExampleObject(
-          value = """
-                { "email": "test@test.com",
-                  "password": "test31!"
-                }
-                """
-        )
-      )
-    )*/
-  )
-  @ApiResponses(
-    value = {
-      @ApiResponse(
-        responseCode = "200",
-        description = "👍User infos Retrieved successfully",
-        content = @Content(
-          mediaType = "application/json",
-          schema = @Schema(implementation = UserDTO.class)
-        )
-      ),
-      @ApiResponse(
-        responseCode = "401",
-        description = "🧙‍♂️unauthorized",
-        content = @Content(mediaType = "text/plain")
-      ),
-      @ApiResponse(
-        responseCode = "400",
-        description = "❌Bad Request",
-        content = @Content(mediaType = "text/plain")
-      ),
-      @ApiResponse(
-        responseCode = "500",
-        description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
-      ),
-    }
-  )
-  @GetMapping("/auth/me")
-  public ResponseEntity<UserDTO> getAuthenticatedUser(
-    Authentication authentication
-  ) {
-    String email = authentication.getName();
-
-    UserDTO userDTO = userService.readUserByEmailAsDTO(email);
-    return ResponseEntity.ok(userDTO);
-  }
-
-  /**
-   * Retrieves the profile of a specific user by their ID.
-   *
-   * @param id The ID of the user to retrieve.
-   * @return A ResponseEntity with the user's details as a DTO.
-   */
-  @Operation(
-    //security = {},
-    summary = "Get infos about user {id}",
-    description = """
-       💁Retrieve user info from database using id.
-       \nid is integer, auto-incremented when saving in database"""
-    /*requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Login request with email and password",
-      required = true,
-      content = @Content(
-        mediaType = "application/json",
-        examples = @ExampleObject(
-          value = """
-                { "email": "test@test.com",
-                  "password": "test31!"
-                }
-                """
-        )
-      )
-    )*/
   )
   @ApiResponses(
     value = {
@@ -283,28 +206,83 @@ public class UserController {
       @ApiResponse(
         responseCode = "401",
         description = "🧙‍♂️unauthorized (no token)",
-        content = @Content(mediaType = "text/plain")
-      ),
-      @ApiResponse(
-        responseCode = "403",
-        description = "🧙‍♂️forbidden (no role)",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "400",
         description = "❌Bad Request",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
       ),
       @ApiResponse(
         responseCode = "500",
         description = "🔧Internal server error",
-        content = @Content(mediaType = "text/plain")
+        content = @Content(mediaType = "application/json")
+      ),
+    }
+  )
+  @GetMapping("/auth/me")
+  public ResponseEntity<UserDTO> getAuthenticatedUser(
+    Authentication authentication
+  ) {
+    String email = authentication.getName();
+
+    UserDTO userDTO = userService.readUserByEmailAsDTO(email);
+    if (userDTO == null) {
+      throw new ResourceNotFoundException("User not found for email: " + email);
+    }
+    return ResponseEntity.ok(userDTO);
+  }
+
+  /**
+   * Retrieves the profile of a specific user by their ID.
+   *
+   * @param id The ID of the user to retrieve.
+   * @return A ResponseEntity with the user's details as a DTO.
+   */
+  @Operation(
+    summary = "Get infos about user {id}",
+    description = """
+       💁Retrieve user info from database using id.
+       \nid is integer, auto-incremented when saving in database"""
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "👍User infos Retrieved successfully",
+        content = @Content(
+          mediaType = "application/json",
+          schema = @Schema(implementation = UserDTO.class)
+        )
+      ),
+      @ApiResponse(
+        responseCode = "401",
+        description = "🧙‍♂️unauthorized (no token)",
+        content = @Content(mediaType = "application/json")
+      ),
+      @ApiResponse(
+        responseCode = "403",
+        description = "🧙‍♂️forbidden (no role)",
+        content = @Content(mediaType = "application/json")
+      ),
+      @ApiResponse(
+        responseCode = "400",
+        description = "❌Bad Request",
+        content = @Content(mediaType = "application/json")
+      ),
+      @ApiResponse(
+        responseCode = "500",
+        description = "🔧Internal server error",
+        content = @Content(mediaType = "application/json")
       ),
     }
   )
   @GetMapping("/user/{id}")
   public ResponseEntity<UserDTO> getUserById(@PathVariable Integer id) {
     User user = userService.readUserById(id);
+    if (user == null) {
+      throw new ResourceNotFoundException("User with ID " + id + " not found.");
+    }
     UserDTO userDTO = UserDTO.fromEntity(user);
     return ResponseEntity.ok(userDTO);
   }

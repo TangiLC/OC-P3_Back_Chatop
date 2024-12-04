@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import com.chatop.dto.RentalDTO;
 import com.chatop.dto.RentalRequestDTO;
+import com.chatop.exception.InvalidInputException;
+import com.chatop.exception.ResourceNotFoundException;
+import com.chatop.exception.UnauthorizedAccessException;
 import com.chatop.model.Rental;
 import com.chatop.model.User;
 import com.chatop.repository.RentalRepository;
@@ -47,12 +50,13 @@ public class RentalService {
    *
    * @param id The ID of the rental.
    * @return The RentalDTO of the specified rental.
-   * @throws RuntimeException if the rental is not found.
+   * @throws ResourceNotFoundException If the rental is not found.
    */
   public RentalDTO readRentalAsDTO(Integer id) {
     Rental rental = rentalRepository
       .findById(id)
-      .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + id)
+      .orElseThrow(() ->
+        new ResourceNotFoundException("Rental not found with ID: " + id)
       );
     return RentalDTO.fromEntity(rental);
   }
@@ -63,20 +67,18 @@ public class RentalService {
    * @param rentalRequestDTO The DTO containing rental data.
    * @param ownerEmail       The email of the rental's owner.
    * @return The created Rental object.
-   * @throws IllegalArgumentException if the owner is not found.
+   * @throws InvalidInputException If the owner is not found.
    */
   public Rental createRental(
     RentalRequestDTO rentalRequestDTO,
     String ownerEmail
   ) {
-    // Fetch the owner from the database
     User owner = userRepository
       .findByEmail(ownerEmail)
       .orElseThrow(() ->
-        new IllegalArgumentException(
-          "Owner not found with email: " + ownerEmail
-        )
+        new InvalidInputException("Owner not found with email: " + ownerEmail)
       );
+
     String pictureUrl = null;
     if (
       rentalRequestDTO.getPicture() != null &&
@@ -86,30 +88,23 @@ public class RentalService {
         pictureUrl =
           imageStorageService.saveImage(rentalRequestDTO.getPicture());
       } catch (Exception e) {
-        throw new IllegalStateException(
+        throw new InvalidInputException(
           "Error while saving picture: " + e.getMessage(),
           e
         );
       }
     }
 
-    // Map DTO to Entity
     Rental rental = new Rental();
     rental.setName(rentalRequestDTO.getName());
     rental.setSurface(rentalRequestDTO.getSurface());
     rental.setPrice(rentalRequestDTO.getPrice());
-    /*rental.setPicture(
-      rentalRequestDTO.getPicture() != null
-        ? rentalRequestDTO.getPicture().getOriginalFilename()
-        : null
-    );*/
     rental.setPicture(pictureUrl);
     rental.setDescription(rentalRequestDTO.getDescription());
     rental.setOwner(owner);
     rental.setCreatedAt(LocalDateTime.now());
     rental.setUpdatedAt(LocalDateTime.now());
 
-    // Save to database
     return rentalRepository.save(rental);
   }
 
@@ -120,26 +115,25 @@ public class RentalService {
    * @param rentalRequestDTO The DTO containing updated rental data.
    * @param ownerId          The id of the authenticated owner.
    * @return The updated Rental object.
-   * @throws IllegalArgumentException owner not found, or user is not the owner.
+   * @throws UnauthorizedAccessException If the current user is not the owner of the rental.
+   * @throws ResourceNotFoundException   If the rental is not found.
    */
   public Rental updateRental(
     Integer id,
     RentalRequestDTO rentalRequestDTO,
     Integer ownerId
   ) {
-    List<Rental> rentals = rentalRepository.findByOwnerId(ownerId);
-    boolean rentalExists = rentals.stream().anyMatch(r -> r.getId().equals(id));
-
-    if (!rentalExists) {
-      throw new IllegalArgumentException(
-        "Current user is not the owner of the rental " + id
-      );
-    }
-
     Rental rental = rentalRepository
       .findById(id)
-      .orElseThrow(() -> new RuntimeException("Rental not found with ID: " + id)
+      .orElseThrow(() ->
+        new ResourceNotFoundException("Rental not found with ID: " + id)
       );
+
+    if (!rental.getOwner().getId().equals(ownerId)) {
+      throw new UnauthorizedAccessException(
+        "Current user is not the owner of the rental with ID: " + id
+      );
+    }
 
     if (rentalRequestDTO.getName() != null) {
       rental.setName(rentalRequestDTO.getName());
@@ -150,9 +144,16 @@ public class RentalService {
     if (rentalRequestDTO.getPrice() != null) {
       rental.setPrice(rentalRequestDTO.getPrice());
     }
-    if (rentalRequestDTO.getPicture() != null) {
-      rental.setPicture(rentalRequestDTO.getPicture().getOriginalFilename());
-    }
+    /*if (rentalRequestDTO.getPicture() != null && !rentalRequestDTO.getPicture().isEmpty()) {
+            try {
+                String pictureUrl = imageStorageService.saveImage(rentalRequestDTO.getPicture());
+                rental.setPicture(pictureUrl);
+            } catch (Exception e) {
+                throw new InvalidInputException("Error while saving picture: " + e.getMessage(), e);
+            }
+        }*/
+    rental.setPicture(rental.getPicture()); //No picture update
+
     if (rentalRequestDTO.getDescription() != null) {
       rental.setDescription(rentalRequestDTO.getDescription());
     }
@@ -167,8 +168,8 @@ public class RentalService {
    * @param id               The ID of the rental to update.
    * @param rentalRequestDTO The DTO containing updated rental data.
    * @return The updated RentalDTO.
-   * @throws RuntimeException if the rental is not found.
    */
+  /* 
   public RentalDTO updateRentalAsDTO(
     Integer id,
     RentalRequestDTO rentalRequestDTO,
@@ -176,5 +177,5 @@ public class RentalService {
   ) {
     Rental updatedRental = updateRental(id, rentalRequestDTO, ownerId);
     return RentalDTO.fromEntity(updatedRental);
-  }
+  }*/
 }
