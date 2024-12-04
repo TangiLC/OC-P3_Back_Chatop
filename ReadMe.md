@@ -26,7 +26,7 @@ La documentation de l'API est disponible via Swagger et inclut des endpoints sé
 ### 📋. Cloner le dépôt
 Clonez le projet depuis GitHub :
 ```bash
-git clone git@github.com:TangiLC/OC-P3_Back_Chatop.git
+git clone https://github.com/TangiLC/OC-P3_Back_Chatop.git
 ```
 
 ### 📥. Créer et importer la base de données

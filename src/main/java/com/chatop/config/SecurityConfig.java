@@ -66,9 +66,9 @@ public class SecurityConfig {
           .anyRequest()
           .authenticated();
       })
-      // Disable form-based login (not used in JWT authentication)
+      
       .formLogin(form -> form.disable())
-      // Add the custom JWT authentication filter before the standard UsernamePasswordAuthenticationFilter
+      // Add the custom JWT authentication filter
       .addFilterBefore(
         jwtAuthenticationFilter(),
         UsernamePasswordAuthenticationFilter.class
