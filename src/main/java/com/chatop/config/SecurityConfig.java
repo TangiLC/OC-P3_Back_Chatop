@@ -60,13 +60,11 @@ public class SecurityConfig {
             "/api/rentals/**",
             "/api/messages/**",
             "/api/user/**"
-            
           )
-          .hasAnyRole("ADMIN","USER")
+          .hasAnyRole("ADMIN", "USER")
           .anyRequest()
           .authenticated();
       })
-      
       .formLogin(form -> form.disable())
       // Add the custom JWT authentication filter
       .addFilterBefore(
