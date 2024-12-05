@@ -60,26 +60,7 @@ public class UserService {
   }
 
   /**
-   * Retrieves a user by their email.
-   *
-   * @param email The email of the user to retrieve.
-   * @return The user object with sensitive data excluded.
-   * @throws ResourceNotFoundException If no user is found with the given email.
-   */
-  public User readUser(String email) {
-    return userRepository
-      .findByEmail(email)
-      .map(user -> {
-        user.setPassword(null); // Exclude password from the response
-        return user;
-      })
-      .orElseThrow(() ->
-        new ResourceNotFoundException("User not found with email: " + email)
-      );
-  }
-
-  /**
-   * Retrieves a user by their email and converts it into a UserDTO.
+   * Retrieves a user by email and converts it into a UserDTO.
    *
    * @param email The email of the user to retrieve.
    * @return A UserDTO containing the user's details.
@@ -107,35 +88,6 @@ public class UserService {
       .orElseThrow(() ->
         new ResourceNotFoundException("User not found with ID: " + id)
       );
-  }
-
-  /**
-   * Updates a user's details.
-   *
-   * @param email       The email of the user to update.
-   * @param updatedData The updated user data.
-   * @return The updated user entity.
-   * @throws ResourceNotFoundException If the user is not found.
-   */
-  public User updateUser(String email, User updatedData) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() ->
-        new ResourceNotFoundException("User not found with email: " + email)
-      );
-
-    // Update only non-null fields
-    if (updatedData.getName() != null) {
-      user.setName(updatedData.getName().trim());
-    }
-    if (updatedData.getPassword() != null) {
-      user.setPassword(
-        passwordEncoder.encode(updatedData.getPassword().trim())
-      );
-    }
-
-    user.setUpdatedAt(LocalDateTime.now());
-    return userRepository.save(user);
   }
 
   /**
@@ -169,18 +121,7 @@ public class UserService {
     return jwtUtil.generateToken(user.getEmail(), user.getRole());
   }
 
-  /**
-   * Deletes a user by their email.
-   *
-   * @param email The email of the user to delete.
-   * @throws ResourceNotFoundException If the user is not found.
-   */
-  public void deleteUser(String email) {
-    User user = userRepository
-      .findByEmail(email)
-      .orElseThrow(() ->
-        new ResourceNotFoundException("User not found with email: " + email)
-      );
-    userRepository.delete(user);
-  }
+  // TO DO Update User's details Method ?
+  // TO DO Delete User Method ?
+
 }

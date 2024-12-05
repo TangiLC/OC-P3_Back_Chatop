@@ -20,8 +20,8 @@ La documentation de l'API est disponible via Swagger et inclut des endpoints sé
 
 ### 🔧. Prérequis
 - **Java 17** ou version ultérieure.
-- **Maven** pour la gestion des dépendances.
-- **MySQL** pour la base de données.
+- **Maven 3.9** pour la gestion des dépendances.
+- **MySQL 8.0** pour la base de données.
 
 ### 📋. Cloner le dépôt
 Clonez le projet depuis GitHub :
@@ -80,7 +80,7 @@ Ce front-end est conçu pour interagir avec cette API et permet de tester les fo
 
 ## 📖 Documentation Swagger 
 
-Lorsque le serveur est lancé, va documentation Swagger V3 est générée et accessible à l'adresse suivante :
+Lorsque le serveur est lancé, la documentation Swagger V3 est générée et accessible à l'adresse suivante :
 [http://localhost:3001/swagger-ui.html](http://localhost:3001/swagger-ui.html)
 
 Pour utiliser les routes protégées :

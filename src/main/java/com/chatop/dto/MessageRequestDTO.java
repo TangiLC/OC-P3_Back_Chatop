@@ -1,5 +1,7 @@
 package com.chatop.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -9,9 +11,11 @@ import jakarta.validation.constraints.NotNull;
 public class MessageRequestDTO {
 
   @NotNull(message = "User ID is required")
+  @JsonProperty("user_id")
   private Integer userId;
 
   @NotNull(message = "Rental ID is required")
+  @JsonProperty("rental_id")
   private Integer rentalId;
 
   @NotBlank(message = "Message content cannot be empty")

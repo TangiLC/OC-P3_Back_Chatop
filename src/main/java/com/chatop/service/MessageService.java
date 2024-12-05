@@ -1,7 +1,6 @@
 package com.chatop.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -77,48 +76,5 @@ public class MessageService {
     return messageRepository.save(message);
   }
 
-  /**
-   * Retrieves a message by its ID.
-   *
-   * @param id The ID of the message to retrieve.
-   * @return The message object.
-   * @throws ResourceNotFoundException If the message is not found.
-   */
-  public Message readMessageById(Integer id) {
-    return messageRepository
-      .findById(id)
-      .orElseThrow(() ->
-        new ResourceNotFoundException("Message not found with ID: " + id)
-      );
-  }
-
-  /**
-   * Retrieves all messages sent by a specific user.
-   *
-   * @param userId The ID of the user whose messages to retrieve.
-   * @return A list of messages sent by the user.
-   * @throws ResourceNotFoundException If the user is not found.
-   */
-  public List<Message> readMessagesByUserId(Integer userId) {
-    if (!userRepository.existsById(userId)) {
-      throw new ResourceNotFoundException("User not found with ID: " + userId);
-    }
-    return messageRepository.findByUserId(userId);
-  }
-
-  /**
-   * Retrieves all messages related to a specific rental.
-   *
-   * @param rentalId The ID of the rental whose messages to retrieve.
-   * @return A list of messages related to the rental.
-   * @throws ResourceNotFoundException If the rental is not found.
-   */
-  public List<Message> readMessagesByRentalId(Integer rentalId) {
-    if (!rentalRepository.existsById(rentalId)) {
-      throw new ResourceNotFoundException(
-        "Rental not found with ID: " + rentalId
-      );
-    }
-    return messageRepository.findByRentalId(rentalId);
-  }
+  
 }

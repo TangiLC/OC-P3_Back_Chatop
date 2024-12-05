@@ -152,7 +152,7 @@ public class RentalService {
                 throw new InvalidInputException("Error while saving picture: " + e.getMessage(), e);
             }
         }*/
-    rental.setPicture(rental.getPicture()); //No picture update
+    rental.setPicture(rental.getPicture()); // TO DO update picture Logic ?
 
     if (rentalRequestDTO.getDescription() != null) {
       rental.setDescription(rentalRequestDTO.getDescription());
@@ -162,20 +162,4 @@ public class RentalService {
     return rentalRepository.save(rental);
   }
 
-  /**
-   * Updates an existing rental by its ID and returns it as a DTO.
-   *
-   * @param id               The ID of the rental to update.
-   * @param rentalRequestDTO The DTO containing updated rental data.
-   * @return The updated RentalDTO.
-   */
-  /* 
-  public RentalDTO updateRentalAsDTO(
-    Integer id,
-    RentalRequestDTO rentalRequestDTO,
-    Integer ownerId
-  ) {
-    Rental updatedRental = updateRental(id, rentalRequestDTO, ownerId);
-    return RentalDTO.fromEntity(updatedRental);
-  }*/
 }
