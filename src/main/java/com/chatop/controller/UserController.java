@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -188,6 +189,7 @@ public class UserController {
    * @return A ResponseEntity with the user's details as a DTO.
    */
   @Operation(
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Get user info",
     description = """
        👤Retrieve user info from database using token as Authentication.
@@ -240,6 +242,7 @@ public class UserController {
    * @return A ResponseEntity with the user's details as a DTO.
    */
   @Operation(
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Get infos about user {id}",
     description = """
        💁Retrieve user info from database using id.

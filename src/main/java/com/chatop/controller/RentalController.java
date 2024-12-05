@@ -28,6 +28,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -66,7 +67,7 @@ public class RentalController {
    * @return A ResponseEntity containing a list of RentalDTOs.
    */
   @Operation(
-    //security = {},
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Get list of rentals",
     description = "📚Retrieve list of rentals from database."
   )
@@ -121,7 +122,7 @@ public class RentalController {
    * @return A ResponseEntity containing the RentalDTO of the specified rental.
    */
   @Operation(
-    //security = {},
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Get the data of {id}",
     description = "🏠Retrieve data about the rental #id."
   )
@@ -186,7 +187,7 @@ public class RentalController {
    * @return A ResponseEntity indicating success or failure.
    */
   @Operation(
-    //security = {},
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Register a new rental",
     description = """
         🆕Registers a new rental (name, email, password).
@@ -258,7 +259,7 @@ public class RentalController {
    * @return A ResponseEntity indicating success or failure.
    */
   @Operation(
-    //security = {},
+    security = @SecurityRequirement(name = "bearerAuth"),
     summary = "Updating rental {id}",
     description = "📝Updates rental #id in database.",
     requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
